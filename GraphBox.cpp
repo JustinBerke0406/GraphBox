@@ -1,7 +1,10 @@
 #include "GraphBox.h"
+#include "Single.h"
 
 int launch() {
-    sf::RenderWindow window(sf::VideoMode(800, 600), "GraphBox");
+    Single& single = Single::instance();
+
+    sf::RenderWindow& window = single.window;
 
     // Event needed for window to work
     sf::Event event{};
@@ -10,7 +13,11 @@ int launch() {
     while (window.isOpen())
     {
         // Draw spriteHidden
-        window.clear();
+        window.clear(sf::Color(255,255,255));
+
+        // Render
+        render();
+
         // draw method
         window.display();
 
@@ -20,6 +27,10 @@ int launch() {
     }
 
     return 0;
+}
+
+void render() {
+
 }
 
 int main() {
