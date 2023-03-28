@@ -5,6 +5,8 @@
 #include <SFML/Graphics/Shape.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
+#include <SFML/Graphics/Text.hpp>
+#include "graph/Node.h"
 
 class GraphState {
 private:
@@ -30,13 +32,25 @@ private:
 
         void transform(sf::Transformable& shape);
         void transform(sf::CircleShape& shape);
+        void transform(sf::Text &shape);
 
         void updateResizeData(sf::Event::SizeEvent size);
     };
 
     PositionGrid positionGrid;
+
+    std::vector<Node> nodes;
 public:
-    GraphState();
+    GraphState() = default;
 
     PositionGrid& getPositionGrid();
+
+    bool createNode(std::string label, float x, float y);
+    bool createNode(std::string label, sf::Event::MouseButtonEvent event);
+
+    bool deleteNode(std::string& label);
+
+    void drawNodes();
+
+    int nodeCount();
 };

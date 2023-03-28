@@ -12,10 +12,12 @@ public:
         return inst;
     }
 
-    const float ZOOM_SPEED = 1.0005f, MOVE_SPEED = 0.0035f;
+    const float ZOOM_SPEED = 1.05f, MOVE_SPEED = 0.35f;
+    const sf::Color NODE_COLOR = sf::Color(240, 240, 240);
 
     sf::RenderWindow window;
     GraphState* state;
+    sf::Font font;
 
     ~Single();
 };

@@ -1,4 +1,5 @@
 #include "GraphState.h"
+#include "Single.h"
 
 void GraphState::PositionGrid::zoom(float scale, float x, float y) {
     float scaleChange = (scale - 1)/scale;
@@ -61,6 +62,16 @@ void GraphState::PositionGrid::transform(sf::CircleShape &shape) {
     shape.setPointCount(fmin(30 * fmax(zoomScale / 100, 2), 480));
 }
 
+void GraphState::PositionGrid::transform(sf::Text &shape) {
+    shape.scale(zoomScale / 100, zoomScale / 100);
+
+    std::array<int, 2> org = loc_gl(shape.getPosition().x, shape.getPosition().y);
+
+    shape.setPosition(org[0], org[1]);
+
+    shape.setCharacterSize(shape.getCharacterSize());
+}
+
 GraphState::PositionGrid::PositionGrid() {
     xOrigin = 0.0f;
     yOrigin = 0.0f;
@@ -86,10 +97,77 @@ void GraphState::PositionGrid::panRelative(float x, float y) {
     yOrigin += y / (zoomScale / 100);
 }
 
-GraphState::GraphState() {
-
-}
-
 GraphState::PositionGrid &GraphState::getPositionGrid() {
     return positionGrid;
+}
+
+bool GraphState::createNode(std::string label, float x, float y) {
+    Node node;
+    node.x = x;
+    node.y = y;
+    node.label = label;
+
+    if (std::any_of(nodes.begin(), nodes.end(), [node](const Node& n) {return node.label == n.label;})) return false;
+
+    nodes.push_back(node);
+
+    return true;
+}
+
+bool GraphState::createNode(std::string label, sf::Event::MouseButtonEvent event) {
+    auto pos = positionGrid.gl_loc(event);
+
+    return createNode(label, pos[0], pos[1]);
+}
+
+bool GraphState::deleteNode(std::string &label) {
+    for (int i = 0; i < nodes.size(); i++)
+        if (nodes[i].label == label) {
+            nodes.erase(nodes.begin() + i);
+            return true;
+        }
+
+    return false;
+}
+
+void GraphState::drawNodes() {
+    Single& single = Single::instance();
+
+    std::vector<sf::CircleShape> circles;
+    std::vector<sf::Text> texts;
+
+    for (const Node& n : nodes) {
+        sf::CircleShape circ;
+        circ.setRadius(0.5f);
+        circ.setOrigin(circ.getLocalBounds().width/2, circ.getLocalBounds().height/2);
+        circ.setOutlineThickness(0.02f);
+        circ.setOutlineColor(sf::Color::Black);
+        circ.setFillColor(single.NODE_COLOR);
+        circ.setPosition(n.x, n.y);
+
+        single.state->getPositionGrid().transform(circ);
+        circles.push_back(circ);
+
+        sf::Text text;
+        text.setFont(single.font);
+        text.setCharacterSize(40);
+        text.setFillColor(sf::Color::Black);
+        text.setPosition(n.x, n.y);
+        text.setString(n.label);
+        single.state->getPositionGrid().transform(text);
+        text.setOrigin(text.getLocalBounds().width/2, text.getLocalBounds().height);
+
+        texts.push_back(text);
+
+        //single.window.draw(text);
+    }
+
+    for (int i = 0; i < texts.size(); i++) {
+        single.window.draw(circles[i]);
+        single.window.draw(texts[i]);
+    }
+}
+
+int GraphState::nodeCount() {
+    return nodes.size();
 }

@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Single.h"
 
 Single::Single() {
@@ -5,6 +6,11 @@ Single::Single() {
 
     window.create(sf::VideoMode(state->getPositionGrid().WIDTH, state->getPositionGrid().HEIGHT),
                   "GraphBox - v1.0");
+
+    window.setFramerateLimit(60);
+
+    if (!font.loadFromFile("arial.ttf"))
+        std::cout << "Unable to load arial.ttf";
 }
 
 Single::~Single() {

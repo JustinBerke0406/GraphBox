@@ -32,7 +32,7 @@ int launch() {
                 window.close();
                 // Mouse clicked event
             else if (event.type == sf::Event::MouseButtonPressed) {
-
+                single.state->createNode(std::to_string(single.state->nodeCount()), event.mouseButton);
             }
             else if (event.type == sf::Event::KeyPressed) {
 
@@ -68,6 +68,8 @@ void render() {
     single.state->getPositionGrid().transform(shape1);
 
     window.draw(shape1);
+
+    single.state->drawNodes();
 }
 
 void registerMovement() {
