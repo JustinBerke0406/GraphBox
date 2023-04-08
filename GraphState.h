@@ -26,6 +26,7 @@ private:
         void panRelative(float x, float y);
 
         [[nodiscard]] std::array<float, 2> gl_loc(int x, int y) const;
+        [[nodiscard]] std::array<float, 2> gl_loc(sf::Vector2<int> pos) const;
         [[nodiscard]] std::array<float, 2> gl_loc(sf::Event::MouseButtonEvent buttonEvent) const;
 
         [[nodiscard]] std::array<int, 2> loc_gl(float x, float y) const;
@@ -39,7 +40,9 @@ private:
 
     PositionGrid positionGrid;
 
-    std::vector<Node> nodes;
+    std::vector<Node*> nodes;
+
+    Node* selectedNode = nullptr;
 public:
     GraphState() = default;
 
@@ -53,4 +56,12 @@ public:
     void drawNodes();
 
     int nodeCount();
+
+    bool selectNode(sf::Event::MouseButtonEvent event);
+    void deselectNode();
+    bool toggleNode(sf::Event::MouseButtonEvent event);
+
+    bool cursorOverClickable();
+
+    ~GraphState();
 };

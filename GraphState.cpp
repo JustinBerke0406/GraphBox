@@ -1,4 +1,6 @@
 #include "GraphState.h"
+
+#include <utility>
 #include "Single.h"
 
 void GraphState::PositionGrid::zoom(float scale, float x, float y) {
@@ -34,6 +36,10 @@ std::array<float, 2> GraphState::PositionGrid::gl_loc(sf::Event::MouseButtonEven
     std::array<float, 2> newPos = gl_loc(buttonEvent.x, buttonEvent.y);
 
     return newPos;
+}
+
+std::array<float, 2> GraphState::PositionGrid::gl_loc(sf::Vector2<int> pos) const {
+    return gl_loc(pos.x, pos.y);
 }
 
 std::array<int, 2> GraphState::PositionGrid::loc_gl(float x, float y) const {
@@ -102,12 +108,12 @@ GraphState::PositionGrid &GraphState::getPositionGrid() {
 }
 
 bool GraphState::createNode(std::string label, float x, float y) {
-    Node node;
-    node.x = x;
-    node.y = y;
-    node.label = label;
+    Node* node = new Node();
+    node->x = x;
+    node->y = y;
+    node->label = std::move(label);
 
-    if (std::any_of(nodes.begin(), nodes.end(), [node](const Node& n) {return node.label == n.label;})) return false;
+    if (std::any_of(nodes.begin(), nodes.end(), [node](Node* n) {return node->label == n->label;})) return false;
 
     nodes.push_back(node);
 
@@ -122,7 +128,7 @@ bool GraphState::createNode(std::string label, sf::Event::MouseButtonEvent event
 
 bool GraphState::deleteNode(std::string &label) {
     for (int i = 0; i < nodes.size(); i++)
-        if (nodes[i].label == label) {
+        if (nodes[i]->label == label) {
             nodes.erase(nodes.begin() + i);
             return true;
         }
@@ -136,14 +142,14 @@ void GraphState::drawNodes() {
     std::vector<sf::CircleShape> circles;
     std::vector<sf::Text> texts;
 
-    for (const Node& n : nodes) {
+    for (const Node* n : nodes) {
         sf::CircleShape circ;
         circ.setRadius(0.5f);
         circ.setOrigin(circ.getLocalBounds().width/2, circ.getLocalBounds().height/2);
         circ.setOutlineThickness(0.02f);
         circ.setOutlineColor(sf::Color::Black);
-        circ.setFillColor(single.NODE_COLOR);
-        circ.setPosition(n.x, n.y);
+        circ.setFillColor((n == selectedNode) ? single.HIGHLIGHT_COLOR : single.NODE_COLOR);
+        circ.setPosition(n->x, n->y);
 
         single.state->getPositionGrid().transform(circ);
         circles.push_back(circ);
@@ -152,8 +158,8 @@ void GraphState::drawNodes() {
         text.setFont(single.font);
         text.setCharacterSize(40);
         text.setFillColor(sf::Color::Black);
-        text.setPosition(n.x, n.y);
-        text.setString(n.label);
+        text.setPosition(n->x, n->y);
+        text.setString(n->label);
         single.state->getPositionGrid().transform(text);
         text.setOrigin(text.getLocalBounds().width/2, text.getLocalBounds().height);
 
@@ -170,4 +176,55 @@ void GraphState::drawNodes() {
 
 int GraphState::nodeCount() {
     return nodes.size();
+}
+
+bool GraphState::selectNode(sf::Event::MouseButtonEvent event) {
+    auto pos = positionGrid.gl_loc(event);
+
+    for (int i = nodes.size() - 1; i >= 0; i--) {
+        Node& n = *nodes[i];
+
+        if (sqrt(pow(pos[0] - n.x, 2)+pow(pos[1] - n.y, 2)) <= 0.5) {
+            selectedNode = &n;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void GraphState::deselectNode() {
+    selectedNode = nullptr;
+}
+
+bool GraphState::toggleNode(sf::Event::MouseButtonEvent event) {
+    Node* curNode = selectedNode;
+
+    if (!selectNode(event))
+        return false;
+
+    if (curNode == selectedNode)
+        deselectNode();
+
+    return true;
+}
+
+GraphState::~GraphState() {
+    for (Node* n : nodes)
+        delete n;
+
+    nodes.clear();
+}
+
+bool GraphState::cursorOverClickable() {
+    auto pos = positionGrid.gl_loc(sf::Mouse::getPosition(Single::instance().window));
+
+    for (int i = nodes.size() - 1; i >= 0; i--) {
+        Node& n = *nodes[i];
+
+        if (sqrt(pow(pos[0] - n.x, 2)+pow(pos[1] - n.y, 2)) <= 0.5)
+            return true;
+    }
+
+    return false;
 }

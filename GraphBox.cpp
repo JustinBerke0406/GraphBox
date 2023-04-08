@@ -10,6 +10,10 @@ int launch() {
     // Event needed for window to work
     sf::Event event{};
 
+    sf::Cursor cursor;
+
+    bool defaultCursor = true;
+
     // For loop to keep window open
     while (window.isOpen())
     {
@@ -25,6 +29,19 @@ int launch() {
         // Movement and zooming
         registerMovement();
 
+        if (single.state->cursorOverClickable() && defaultCursor) {
+            cursor.loadFromSystem(sf::Cursor::Hand);
+            window.setMouseCursor(cursor);
+
+            defaultCursor = false;
+        }
+        else if (!single.state->cursorOverClickable() && !defaultCursor) {
+            cursor.loadFromSystem(sf::Cursor::Arrow);
+            window.setMouseCursor(cursor);
+
+            defaultCursor = true;
+        }
+
         // Close window if the close event was triggered
         if (window.pollEvent(event)) {
             // Close window event
@@ -32,7 +49,9 @@ int launch() {
                 window.close();
                 // Mouse clicked event
             else if (event.type == sf::Event::MouseButtonPressed) {
-                single.state->createNode(std::to_string(single.state->nodeCount()), event.mouseButton);
+                if (single.state->toggleNode(event.mouseButton)) {}
+                else
+                    single.state->createNode(std::to_string(single.state->nodeCount()), event.mouseButton);
             }
             else if (event.type == sf::Event::KeyPressed) {
 

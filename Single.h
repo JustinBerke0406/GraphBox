@@ -13,7 +13,9 @@ public:
     }
 
     const float ZOOM_SPEED = 1.05f, MOVE_SPEED = 0.35f;
-    const sf::Color NODE_COLOR = sf::Color(240, 240, 240);
+
+    const sf::Color NODE_COLOR = sf::Color(240, 240, 240),
+                    HIGHLIGHT_COLOR = sf::Color(240, 233, 121);
 
     sf::RenderWindow window;
     GraphState* state;
