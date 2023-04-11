@@ -34,6 +34,7 @@ private:
         void transform(sf::Transformable& shape);
         void transform(sf::CircleShape& shape);
         void transform(sf::Text &shape);
+        void transform(sf::Vertex& one, sf::Vertex& two);
 
         void updateResizeData(sf::Event::SizeEvent size);
     };
@@ -48,10 +49,14 @@ public:
 
     PositionGrid& getPositionGrid();
 
-    bool createNode(std::string label, float x, float y);
-    bool createNode(std::string label, sf::Event::MouseButtonEvent event);
+    std::string createNode(std::string label, float x, float y);
+    std::string createNode(std::string label, sf::Event::MouseButtonEvent event);
+    std::string createNode(sf::Event::MouseButtonEvent event);
 
-    bool deleteNode(std::string& label);
+    bool deleteNode(Node* node);
+
+    Node* nodeAt(sf::Event::MouseButtonEvent event);
+    Node* nodeAt(sf::Vector2<int> pos);
 
     void drawNodes();
 
@@ -61,7 +66,17 @@ public:
     void deselectNode();
     bool toggleNode(sf::Event::MouseButtonEvent event);
 
+    bool wouldSelect(sf::Event::MouseButtonEvent event);
+
     bool cursorOverClickable();
+
+    bool isLabelTaken(const std::string& str);
+
+    void setConnection(Node* to);
+
+    enum Mode { Edit, Connect, View, Typing };
+
+    Mode mode = Mode::Edit;
 
     ~GraphState();
 };

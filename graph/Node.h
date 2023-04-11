@@ -5,4 +5,5 @@
 struct Node {
     float x, y;
     std::string label;
+    Node* connection;
 };

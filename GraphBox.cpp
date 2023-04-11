@@ -27,7 +27,8 @@ int launch() {
         window.display();
 
         // Movement and zooming
-        registerMovement();
+        if (single.state->mode != GraphState::Mode::Typing)
+            registerMovement();
 
         if (single.state->cursorOverClickable() && defaultCursor) {
             cursor.loadFromSystem(sf::Cursor::Hand);
@@ -49,12 +50,30 @@ int launch() {
                 window.close();
                 // Mouse clicked event
             else if (event.type == sf::Event::MouseButtonPressed) {
-                if (single.state->toggleNode(event.mouseButton)) {}
-                else
-                    single.state->createNode(std::to_string(single.state->nodeCount()), event.mouseButton);
+                if (single.state->mode != GraphState::Mode::View) {
+                    if (single.state->mode != GraphState::Mode::Typing) {
+                        if (event.mouseButton.button == sf::Mouse::Left) {
+                            if (single.state->mode == GraphState::Mode::Edit &&
+                                !single.state->toggleNode(event.mouseButton))
+                                single.state->createNode(event.mouseButton);
+                            else if (single.state->mode == GraphState::Mode::Connect) {
+                                if (single.state->wouldSelect(event.mouseButton))
+                                    single.state->setConnection(single.state->nodeAt(event.mouseButton));
+                                else
+                                    single.state->mode = GraphState::Mode::Edit;
+                            }
+                        }
+                        else if (event.mouseButton.button == sf::Mouse::Right &&
+                                 single.state->mode == GraphState::Mode::Edit)
+                            single.state->deleteNode(single.state->nodeAt(event.mouseButton));
+                    }
+                }
             }
             else if (event.type == sf::Event::KeyPressed) {
-
+                if (single.state->mode != GraphState::Mode::Typing) {
+                    if (event.key.code == sf::Keyboard::C)
+                        single.state->mode = GraphState::Mode::Connect;
+                }
             }
             else if (event.type == sf::Event::Resized) {
                 single.state->getPositionGrid().updateResizeData(event.size);
