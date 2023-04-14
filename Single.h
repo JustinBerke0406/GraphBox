@@ -36,6 +36,10 @@ public:
 
     const GraphState::Mode DEFAULT_MODE = GraphState::Mode::Edit;
 
+    const std::string OUTPUT_FILE = "GraphBox_Save_";
+
+    int files = 0;
+
     sf::RenderWindow window;
     GraphState* state;
     sf::Font font;

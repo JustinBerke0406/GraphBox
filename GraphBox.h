@@ -9,4 +9,6 @@ void registerMovement();
 
 void onMouseHeld(sf::Vector2f offset, Node* node);
 
+void print();
+
 void render();

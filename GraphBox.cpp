@@ -1,4 +1,6 @@
 #include <iostream>
+#include <fstream>
+#include <unordered_set>
 #include "GraphBox.h"
 #include "Single.h"
 
@@ -187,6 +189,8 @@ int launch() {
                         single.state->toggleForce();
                     else if (event.key.code == sf::Keyboard::E)
                         single.state->mode = GraphState::Mode::Edit;
+                    else if (event.key.code == sf::Keyboard::P)
+                        print();
                 }
             }
             else if (event.type == sf::Event::TextEntered) {
@@ -252,6 +256,93 @@ void render() {
     sf::RenderWindow& window = single.window;
 
     single.state->drawNodes();
+}
+
+void print() {
+    Single& single = Single::instance();
+
+    single.files++;
+
+    std::string list;
+
+    auto nodes = single.state->getNodes();
+
+    auto doQuote = [](const std::string& str) {
+        for (auto c : str) {
+            if (isspace(c))
+                return "\"" + str + "\"";
+        }
+
+        return str;
+    };
+
+    if (single.state->directed) {
+        std::vector<std::pair<std::string, std::string>> combo;
+
+        bool dup;
+
+        for (auto& node : nodes) {
+            for (Node* n : node->connections)
+                combo.emplace_back(node->label, n->label);
+        }
+
+        for (Node* n : nodes) {
+            if (n->connections.empty()) {
+                dup = false;
+
+                for (const std::pair<std::string, std::string> &p: combo)
+                    if (p.first == n->label || p.second == n->label) dup = true;
+
+                if (!dup)
+                    list += doQuote(n->label) + "\n";
+            }
+        }
+
+        for (const auto& p : combo)
+            list += doQuote(p.first) + " " + doQuote(p.second) + "\n";
+    }
+    else {
+        auto cmp = [](std::pair<std::string, std::string> a, std::pair<std::string, std::string> b) {
+            return (a.first == b.first && a.second == b.second) || (a.first == b.second && a.second == b.first);
+        };
+
+        std::vector<std::pair<std::string, std::string>> combo;
+
+        bool dup;
+
+        for (auto& node : nodes) {
+            for (Node* n : node->connections) {
+                std::pair<std::string, std::string> a1(node->label, n->label);
+
+                dup = false;
+
+                for (const std::pair<std::string, std::string>& p : combo)
+                    if (cmp(p, a1)) dup = true;
+
+                if (!dup)
+                    combo.push_back(a1);
+            }
+        }
+
+        for (Node* n : nodes) {
+            if (n->connections.empty()) {
+                dup = false;
+
+                for (const std::pair<std::string, std::string> &p: combo)
+                    if (p.first == n->label || p.second == n->label) dup = true;
+
+                if (!dup)
+                    list += doQuote(n->label) + "\n";
+            }
+        }
+
+        for (const auto& p : combo)
+            list += doQuote(p.first) + " " + doQuote(p.second) + "\n";
+    }
+
+    auto out = std::ofstream(single.OUTPUT_FILE + std::to_string(single.files) + ((single.state->directed) ? "_Directed" : "") + ".txt");
+    out << list;
+    out.close();
 }
 
 void registerMovement() {

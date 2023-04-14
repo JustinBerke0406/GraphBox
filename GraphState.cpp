@@ -561,3 +561,7 @@ float GraphState::distance(Node *one, Node *two) {
 void GraphState::toggleForce() {
     forceMode = !forceMode;
 }
+
+std::vector<Node *> GraphState::getNodes() {
+    return nodes;
+}

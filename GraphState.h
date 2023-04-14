@@ -97,6 +97,8 @@ public:
 
     float distance(Node* one, Node* two);
 
+    std::vector<Node*> getNodes();
+
     void physicsUpdate();
 
     [[nodiscard]] std::string getMode() const;
