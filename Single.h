@@ -19,7 +19,9 @@ public:
 
     const float EDGE_THICKNESS = 0.02f, ARROW_THICKNESS = 10.0f;
 
-    const int MOUSE_HOLD_TIME = 5;
+    const int MOUSE_HOLD_TIME = 3;
+
+    const GraphState::Mode DEFAULT_MODE = GraphState::Mode::Edit;
 
     sf::RenderWindow window;
     GraphState* state;

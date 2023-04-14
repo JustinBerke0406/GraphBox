@@ -67,6 +67,8 @@ public:
     void deselectNode();
     bool toggleNode(sf::Event::MouseButtonEvent event);
 
+    bool toggleNode(Node* node);
+
     bool wouldSelect(sf::Event::MouseButtonEvent event);
 
     bool cursorOverClickable();
@@ -77,6 +79,7 @@ public:
     bool removeConnection(Node* to, Node* from = nullptr);
 
     void toggleDirectedMode();
+    void toggleConnectMode();
 
     bool isNodeSelected();
 
@@ -84,6 +87,7 @@ public:
 
     void changeNodePosition(Node* node, sf::Event::MouseButtonEvent event);
     void changeNodePosition(Node* node, sf::Vector2i mousePos);
+    void changeNodePositionLocally(Node* node, sf::Vector2f pos);
 
     enum Mode { Edit, Connect, View, Typing };
 

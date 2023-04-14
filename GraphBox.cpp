@@ -7,6 +7,8 @@ int launch() {
 
     sf::RenderWindow& window = single.window;
 
+    window.setKeyRepeatEnabled(false);
+
     // Event needed for window to work
     sf::Event event{};
 
@@ -15,10 +17,11 @@ int launch() {
     bool defaultCursor = true;
     bool mouseHeld = false;
     bool offsetSet = false;
+    bool readyToSelect = false;
 
     int timeMouseHeld = 0;
 
-    sf::Vector2i offset;
+    sf::Vector2f offset;
     Node* draggedNode = nullptr;
 
     // For loop to keep window open
@@ -34,6 +37,11 @@ int launch() {
             timeMouseHeld = 0;
             offsetSet = false;
             draggedNode = nullptr;
+
+            if (readyToSelect) {
+                single.state->toggleNode(single.state->nodeAt(sf::Mouse::getPosition(single.window)));
+                readyToSelect = false;
+            }
         }
 
         if (mouseHeld) {
@@ -49,8 +57,10 @@ int launch() {
                         draggedNode = node;
 
                     if (!offsetSet) {
-                        auto globalNode = single.state->getPositionGrid().loc_gl(draggedNode->x, draggedNode->y);
-                        offset = sf::Vector2i(mousePos.x - globalNode[0], mousePos.y - globalNode[1]);
+                        auto loMouse = single.state->getPositionGrid().gl_loc(mousePos);
+                        auto glOff = single.state->getPositionGrid().loc_gl(loMouse[0] - draggedNode->x, loMouse[1] - draggedNode->y);
+
+                        offset = sf::Vector2f(loMouse[0] - draggedNode->x, loMouse[1] - draggedNode->y);
                     }
 
                     offsetSet = true;
@@ -93,7 +103,7 @@ int launch() {
                             mouseHeld = false;
 
                             if (single.state->mode == GraphState::Mode::Edit &&
-                                !single.state->toggleNode(event.mouseButton))
+                                !single.state->cursorOverClickable())
                                 single.state->createNode(event.mouseButton);
                             else if (single.state->mode == GraphState::Mode::Connect) {
                                 if (single.state->wouldSelect(event.mouseButton))
@@ -103,6 +113,7 @@ int launch() {
                             }
                             else if (single.state->mode == GraphState::Mode::Edit) {
                                 mouseHeld = true;
+                                readyToSelect = true;
                             }
                         }
                         else if (event.mouseButton.button == sf::Mouse::Right &&
@@ -114,7 +125,7 @@ int launch() {
             else if (event.type == sf::Event::KeyPressed) {
                 if (single.state->mode != GraphState::Mode::Typing) {
                     if (event.key.code == sf::Keyboard::C)
-                        single.state->mode = GraphState::Mode::Connect;
+                        single.state->toggleConnectMode();
                     else if (event.key.code == sf::Keyboard::D)
                         single.state->toggleDirectedMode();
                 }
@@ -122,17 +133,22 @@ int launch() {
             else if (event.type == sf::Event::Resized) {
                 single.state->getPositionGrid().updateResizeData(event.size);
             }
+            else if (event.type == sf::Event::MouseMoved) {
+                readyToSelect = false;
+            }
         }
     }
 
     return 0;
 }
 
-void onMouseHeld(sf::Vector2i offset, Node* node) {
+void onMouseHeld(sf::Vector2f offset, Node* node) {
     Single& single = Single::instance();
 
     if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-        single.state->changeNodePosition(node, sf::Mouse::getPosition(single.window) - offset);
+        auto pos = single.state->getPositionGrid().gl_loc(sf::Mouse::getPosition(single.window));
+        sf::Vector2f ms(pos[0], pos[1]);
+        single.state->changeNodePositionLocally(node, ms - offset);
     }
 }
 

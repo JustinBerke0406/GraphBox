@@ -261,6 +261,15 @@ bool GraphState::toggleNode(sf::Event::MouseButtonEvent event) {
     return true;
 }
 
+bool GraphState::toggleNode(Node* node) {
+    if (selectedNode == node)
+        deselectNode();
+    else
+        selectedNode = node;
+
+    return true;
+}
+
 GraphState::~GraphState() {
     for (Node* n : nodes)
         delete n;
@@ -445,9 +454,21 @@ void GraphState::changeNodePosition(Node* node, sf::Event::MouseButtonEvent even
     node->y = pos[1];
 }
 
+void GraphState::changeNodePositionLocally(Node *node, sf::Vector2f pos) {
+    node->x = pos.x;
+    node->y = pos.y;
+}
+
 void GraphState::changeNodePosition(Node *node, sf::Vector2i mousePos) {
     auto pos = getPositionGrid().gl_loc(mousePos);
 
     node->x = pos[0];
     node->y = pos[1];
+}
+
+void GraphState::toggleConnectMode() {
+    if (mode == Mode::Connect)
+        mode = Single::instance().DEFAULT_MODE;
+    else
+        mode = Mode::Connect;
 }
