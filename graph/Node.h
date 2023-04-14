@@ -1,9 +1,10 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 struct Node {
     float x, y;
     std::string label;
-    Node* connection;
+    std::vector<Node*> connections;
 };

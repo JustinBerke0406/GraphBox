@@ -17,7 +17,9 @@ public:
     const sf::Color NODE_COLOR = sf::Color(240, 240, 240),
                     HIGHLIGHT_COLOR = sf::Color(240, 233, 121);
 
-    const float EDGE_THICKNESS = 0.02f;
+    const float EDGE_THICKNESS = 0.02f, ARROW_THICKNESS = 10.0f;
+
+    const int MOUSE_HOLD_TIME = 5;
 
     sf::RenderWindow window;
     GraphState* state;

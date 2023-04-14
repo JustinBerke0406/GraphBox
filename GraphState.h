@@ -34,7 +34,7 @@ private:
         void transform(sf::Transformable& shape);
         void transform(sf::CircleShape& shape);
         void transform(sf::Text &shape);
-        void transform(sf::Vertex& one, sf::Vertex& two);
+        void transform(sf::Vertex* ones, int count);
 
         void updateResizeData(sf::Event::SizeEvent size);
     };
@@ -59,6 +59,7 @@ public:
     Node* nodeAt(sf::Vector2<int> pos);
 
     void drawNodes();
+    void drawEdge(sf::Vector2f pos1, sf::Vector2f pos2, int n1, int n2, char arrow);
 
     int nodeCount();
 
@@ -72,11 +73,23 @@ public:
 
     bool isLabelTaken(const std::string& str);
 
-    void setConnection(Node* to);
+    bool addConnection(Node* to, Node* from = nullptr);
+    bool removeConnection(Node* to, Node* from = nullptr);
+
+    void toggleDirectedMode();
+
+    bool isNodeSelected();
+
+    Node* getSelectedNode();
+
+    void changeNodePosition(Node* node, sf::Event::MouseButtonEvent event);
+    void changeNodePosition(Node* node, sf::Vector2i mousePos);
 
     enum Mode { Edit, Connect, View, Typing };
 
     Mode mode = Mode::Edit;
+
+    bool directed = 0;
 
     ~GraphState();
 };

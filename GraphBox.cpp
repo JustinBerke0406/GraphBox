@@ -13,6 +13,13 @@ int launch() {
     sf::Cursor cursor;
 
     bool defaultCursor = true;
+    bool mouseHeld = false;
+    bool offsetSet = false;
+
+    int timeMouseHeld = 0;
+
+    sf::Vector2i offset;
+    Node* draggedNode = nullptr;
 
     // For loop to keep window open
     while (window.isOpen())
@@ -22,6 +29,36 @@ int launch() {
 
         // Render
         render();
+
+        if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+            timeMouseHeld = 0;
+            offsetSet = false;
+            draggedNode = nullptr;
+        }
+
+        if (mouseHeld) {
+            timeMouseHeld++;
+
+            if (timeMouseHeld >= single.MOUSE_HOLD_TIME) {
+                auto mousePos = sf::Mouse::getPosition(single.window);
+
+                Node* node = single.state->nodeAt(mousePos);
+
+                if (node != nullptr || draggedNode != nullptr) {
+                    if (draggedNode == nullptr)
+                        draggedNode = node;
+
+                    if (!offsetSet) {
+                        auto globalNode = single.state->getPositionGrid().loc_gl(draggedNode->x, draggedNode->y);
+                        offset = sf::Vector2i(mousePos.x - globalNode[0], mousePos.y - globalNode[1]);
+                    }
+
+                    offsetSet = true;
+
+                    onMouseHeld(offset, draggedNode);
+                }
+            }
+        }
 
         // draw method
         window.display();
@@ -53,14 +90,19 @@ int launch() {
                 if (single.state->mode != GraphState::Mode::View) {
                     if (single.state->mode != GraphState::Mode::Typing) {
                         if (event.mouseButton.button == sf::Mouse::Left) {
+                            mouseHeld = false;
+
                             if (single.state->mode == GraphState::Mode::Edit &&
                                 !single.state->toggleNode(event.mouseButton))
                                 single.state->createNode(event.mouseButton);
                             else if (single.state->mode == GraphState::Mode::Connect) {
                                 if (single.state->wouldSelect(event.mouseButton))
-                                    single.state->setConnection(single.state->nodeAt(event.mouseButton));
-                                else
-                                    single.state->mode = GraphState::Mode::Edit;
+                                    single.state->addConnection(single.state->nodeAt(event.mouseButton));
+
+                                single.state->mode = GraphState::Mode::Edit;
+                            }
+                            else if (single.state->mode == GraphState::Mode::Edit) {
+                                mouseHeld = true;
                             }
                         }
                         else if (event.mouseButton.button == sf::Mouse::Right &&
@@ -73,6 +115,8 @@ int launch() {
                 if (single.state->mode != GraphState::Mode::Typing) {
                     if (event.key.code == sf::Keyboard::C)
                         single.state->mode = GraphState::Mode::Connect;
+                    else if (event.key.code == sf::Keyboard::D)
+                        single.state->toggleDirectedMode();
                 }
             }
             else if (event.type == sf::Event::Resized) {
@@ -84,28 +128,18 @@ int launch() {
     return 0;
 }
 
+void onMouseHeld(sf::Vector2i offset, Node* node) {
+    Single& single = Single::instance();
+
+    if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
+        single.state->changeNodePosition(node, sf::Mouse::getPosition(single.window) - offset);
+    }
+}
+
 void render() {
     Single& single = Single::instance();
 
     sf::RenderWindow& window = single.window;
-
-    sf::CircleShape shape(1);
-
-    shape.setFillColor(sf::Color(100, 250, 50));
-    shape.setPosition(3, 3);
-
-    single.state->getPositionGrid().transform(shape);
-
-    window.draw(shape);
-
-    sf::CircleShape shape1(1);
-
-    shape1.setFillColor(sf::Color(100, 250, 50));
-    shape1.setPosition(5, 3);
-
-    single.state->getPositionGrid().transform(shape1);
-
-    window.draw(shape1);
 
     single.state->drawNodes();
 }

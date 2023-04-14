@@ -76,12 +76,13 @@ void GraphState::PositionGrid::transform(sf::Text &shape) {
     shape.setPosition(org[0], org[1]);
 }
 
-void GraphState::PositionGrid::transform(sf::Vertex& one, sf::Vertex& two) {
-    auto glPos1 = loc_gl(one.position.x, one.position.y);
-    auto glPos2 = loc_gl(two.position.x, two.position.y);
+void GraphState::PositionGrid::transform(sf::Vertex* ones, int count) {
+    for (int i = 0; i < count; i++) {
+        auto& one = ones[i];
+        auto glPos1 = loc_gl(one.position.x, one.position.y);
 
-    one.position = sf::Vector2f(glPos1[0], glPos1[1]);
-    two.position = sf::Vector2f(glPos2[0], glPos2[1]);
+        one.position = sf::Vector2f(glPos1[0], glPos1[1]);
+    }
 }
 
 GraphState::PositionGrid::PositionGrid() {
@@ -142,7 +143,14 @@ std::string GraphState::createNode(sf::Event::MouseButtonEvent event) {
 bool GraphState::deleteNode(Node* node) {
     for (int i = 0; i < nodes.size(); i++)
         if (nodes[i] == node) {
-            delete nodes[i];
+            for (Node* n : nodes)
+                removeConnection(node, n);
+            node->connections.clear();
+
+            if (selectedNode == node)
+                selectedNode = nullptr;
+
+            delete node;
             nodes.erase(nodes.begin() + i);
             return true;
         }
@@ -178,6 +186,9 @@ void GraphState::drawNodes() {
         text.setOrigin(text.getLocalBounds().width/2, text.getLocalBounds().height);
 
         texts.push_back(text);
+
+        for (Node* con : n->connections)
+            drawEdge(sf::Vector2f(n->x, n->y), sf::Vector2f(con->x, con->y), true, true, 2*directed);
     }
 
     for (int i = 0; i < texts.size(); i++) {
@@ -189,8 +200,8 @@ void GraphState::drawNodes() {
         && selectedNode != nullptr
         && nodeAt(sf::Mouse::getPosition(single.window)) != selectedNode) {
 
-        sf::Vertex line[4];
         auto mPos = getPositionGrid().gl_loc(sf::Mouse::getPosition(single.window));
+        /*
 
         float cX = mPos[0] - selectedNode->x,
               cY = mPos[1] - selectedNode->y;
@@ -214,7 +225,9 @@ void GraphState::drawNodes() {
         getPositionGrid().transform(line[0], line[1]);
         getPositionGrid().transform(line[2], line[3]);
 
-        single.window.draw(line, 4, sf::Quads);
+        single.window.draw(line, 4, sf::Quads);*/
+
+        drawEdge(sf::Vector2f(selectedNode->x, selectedNode->y), sf::Vector2f(mPos[0], mPos[1]), true, false, 0);
     }
 }
 
@@ -303,6 +316,138 @@ bool GraphState::wouldSelect(sf::Event::MouseButtonEvent event) {
     return false;
 }
 
-void GraphState::setConnection(Node *to) {
-    selectedNode->connection = to;
+bool GraphState::addConnection(Node* to, Node* from) {
+    Node* addTo;
+
+    if (from == nullptr) {
+        if (selectedNode == nullptr) return false;
+
+        addTo = selectedNode;
+    }
+    else
+        addTo = from;
+
+    if (std::any_of(addTo->connections.begin(), addTo->connections.end(), [to](Node* n) {return n == to;})) return false;
+
+    addTo->connections.push_back(to);
+
+    return true;
+}
+
+bool GraphState::removeConnection(Node* to, Node* from) {
+    Node* removeFrom;
+
+    if (from == nullptr) {
+        if (selectedNode == nullptr) return false;
+
+        removeFrom = selectedNode;
+    }
+    else
+        removeFrom = from;
+
+    for (int i = 0; i < removeFrom->connections.size(); i++) {
+        if (removeFrom->connections[i] == to) {
+            removeFrom->connections.erase(removeFrom->connections.begin() + i);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void GraphState::drawEdge(sf::Vector2f pos1, sf::Vector2f pos2, int n1, int n2, char arrow) {
+    Single& single = Single::instance();
+
+    sf::Vector2f mpos1, mpos2;
+
+    if (pos1.x < pos2.x) {
+        mpos1 = pos1;
+        mpos2 = pos2;
+    } else {
+        mpos1 = pos2;
+        mpos2 = pos1;
+
+        bool temp = n1;
+        n1 = n2;
+        n2 = temp;
+
+        if (arrow == 2)
+            arrow = 1;
+        else if (arrow == 1)
+            arrow = 2;
+    }
+
+    sf::Vertex line[4];
+
+    if (arrow == 1)
+        n1 *= 2;
+    else if (arrow == 2)
+        n2 *= 2;
+
+    float cX = mpos2.x - mpos1.x,
+            cY = mpos2.y - mpos1.y;
+
+    float mag = sqrt(pow(cX, 2) + pow(cY, 2));
+
+    sf::Vector2f perp(-cY*single.EDGE_THICKNESS/mag, cX*single.EDGE_THICKNESS/mag);
+
+    line[0].position = sf::Vector2f((cX*0.5f/mag)*n1+mpos1.x - perp.x, (cY*0.5f/mag)*n1 + mpos1.y - perp.y);
+    line[0].color = sf::Color::Black;
+
+    line[1].position = sf::Vector2f(-(cX*0.5f/mag)*n2+mpos2.x - perp.x, -(cY*0.5f/mag)*n2+mpos2.y - perp.y);
+    line[1].color = sf::Color::Black;
+
+    line[2].position = sf::Vector2f(line[1].position.x+perp.x*2, line[1].position.y+perp.y*2);
+    line[2].color = sf::Color::Black;
+
+    line[3].position = sf::Vector2f(line[0].position.x+perp.x*2, line[0].position.y+perp.y*2);
+    line[3].color = sf::Color::Black;
+
+    if (arrow != 0) {
+        sf::Vertex arr[3];
+
+        int sign = -(3 - 2 * arrow);
+
+        arr[0].position = sf::Vector2f(line[arrow-1].position.x + perp.x*(single.ARROW_THICKNESS+1), line[arrow-1].position.y + perp.y*(single.ARROW_THICKNESS+1));
+        arr[1].position = sf::Vector2f(line[arrow-1].position.x - perp.x*(single.ARROW_THICKNESS-1), line[arrow-1].position.y - perp.y*(single.ARROW_THICKNESS-1));
+        arr[2].position = sf::Vector2f(sign*(cX*0.5f/mag)+line[arrow-1].position.x + perp.x, sign*(cY*0.5f/mag)+line[arrow-1].position.y + perp.y);
+
+        arr[0].color = sf::Color::Black;
+        arr[1].color = sf::Color::Black;
+        arr[2].color = sf::Color::Black;
+
+        getPositionGrid().transform(arr, 3);
+
+        single.window.draw(arr, 3, sf::Triangles);
+    }
+
+    getPositionGrid().transform(line, 4);
+
+    single.window.draw(line, 4, sf::Quads);
+}
+
+void GraphState::toggleDirectedMode() {
+    directed = !directed;
+}
+
+bool GraphState::isNodeSelected() {
+    return selectedNode != nullptr;
+}
+
+Node *GraphState::getSelectedNode() {
+    return selectedNode;
+}
+
+void GraphState::changeNodePosition(Node* node, sf::Event::MouseButtonEvent event) {
+    auto pos = getPositionGrid().gl_loc(event);
+
+    node->x = pos[0];
+    node->y = pos[1];
+}
+
+void GraphState::changeNodePosition(Node *node, sf::Vector2i mousePos) {
+    auto pos = getPositionGrid().gl_loc(mousePos);
+
+    node->x = pos[0];
+    node->y = pos[1];
 }
