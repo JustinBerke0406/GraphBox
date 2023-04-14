@@ -164,13 +164,20 @@ void GraphState::drawNodes() {
     std::vector<sf::CircleShape> circles;
     std::vector<sf::Text> texts;
 
+    if (mode == Mode::Typing) {
+        textBlinker++;
+
+        if (textBlinker > single.TEXT_BLINKER_TIME*2)
+            textBlinker = 0;
+    }
+
     for (const Node* n : nodes) {
         sf::CircleShape circ;
         circ.setRadius(0.5f);
         circ.setOrigin(circ.getLocalBounds().width/2, circ.getLocalBounds().height/2);
         circ.setOutlineThickness(0.02f);
         circ.setOutlineColor(sf::Color::Black);
-        circ.setFillColor((n == selectedNode) ? single.HIGHLIGHT_COLOR : single.NODE_COLOR);
+        circ.setFillColor((n == selectedNode) ? ((!errorLabel) ? single.HIGHLIGHT_COLOR : single.ERROR_COLOR) : single.NODE_COLOR);
         circ.setPosition(n->x, n->y);
 
         single.state->getPositionGrid().transform(circ);
@@ -182,9 +189,13 @@ void GraphState::drawNodes() {
         text.setFillColor(sf::Color::Black);
         text.setPosition(n->x, n->y);
         text.setString(n->label);
-        single.state->getPositionGrid().transform(text);
-        text.setOrigin(text.getLocalBounds().width/2, text.getLocalBounds().height);
+        text.setOrigin(text.getLocalBounds().width/2, 25);
 
+        if (mode == Mode::Typing && textBlinker < single.TEXT_BLINKER_TIME && n == selectedNode && !n->label.empty()) {
+            text.setString(n->label + "_");
+        }
+
+        single.state->getPositionGrid().transform(text);
         texts.push_back(text);
 
         for (Node* con : n->connections)
@@ -201,34 +212,18 @@ void GraphState::drawNodes() {
         && nodeAt(sf::Mouse::getPosition(single.window)) != selectedNode) {
 
         auto mPos = getPositionGrid().gl_loc(sf::Mouse::getPosition(single.window));
-        /*
-
-        float cX = mPos[0] - selectedNode->x,
-              cY = mPos[1] - selectedNode->y;
-
-        float mag = sqrt(pow(cX, 2) + pow(cY, 2));
-
-        sf::Vector2f perp(-cY*single.EDGE_THICKNESS/mag, cX*single.EDGE_THICKNESS/mag);
-
-        line[0].position = sf::Vector2f(mPos[0] - perp.x, mPos[1] - perp.y);
-        line[0].color = sf::Color::Black;
-
-        line[1].position = sf::Vector2f((cX*0.5f/mag)+selectedNode->x - perp.x, (cY*0.5f/mag)+selectedNode->y - perp.y);
-        line[1].color = sf::Color::Black;
-
-        line[2].position = sf::Vector2f(line[1].position.x+perp.x*2, line[1].position.y+perp.y*2);
-        line[2].color = sf::Color::Black;
-
-        line[3].position = sf::Vector2f(line[0].position.x+perp.x*2, line[0].position.y+perp.y*2);
-        line[3].color = sf::Color::Black;
-
-        getPositionGrid().transform(line[0], line[1]);
-        getPositionGrid().transform(line[2], line[3]);
-
-        single.window.draw(line, 4, sf::Quads);*/
 
         drawEdge(sf::Vector2f(selectedNode->x, selectedNode->y), sf::Vector2f(mPos[0], mPos[1]), true, false, 0);
     }
+
+    sf::Text text;
+    text.setFont(single.font);
+    text.setCharacterSize(single.WINDOW_TEXT_SIZE);
+    text.setFillColor(sf::Color::Black);
+    text.setPosition(single.WINDOW_TEXT_X_OFF, single.WINDOW_TEXT_Y_OFF);
+    text.setString("Mode: " + getMode());
+
+    single.window.draw(text);
 }
 
 int GraphState::nodeCount() {
@@ -238,6 +233,14 @@ int GraphState::nodeCount() {
 bool GraphState::selectNode(sf::Event::MouseButtonEvent event) {
     Node* node = nodeAt(event);
 
+    if (node == nullptr)
+        return false;
+
+    selectedNode = node;
+    return true;
+}
+
+bool GraphState::selectNode(Node* node) {
     if (node == nullptr)
         return false;
 
@@ -316,6 +319,10 @@ bool GraphState::isLabelTaken(const std::string& str) {
     return std::any_of(nodes.begin(), nodes.end(), [str](Node* n) {return n->label == str;});
 }
 
+bool GraphState::isLabelTaken(const std::string &str, Node* exc) {
+    return std::any_of(nodes.begin(), nodes.end(), [str, exc](Node* n) {return (n->label == str && n != exc);});
+}
+
 bool GraphState::wouldSelect(sf::Event::MouseButtonEvent event) {
     Node* n = nodeAt(event);
 
@@ -337,6 +344,8 @@ bool GraphState::addConnection(Node* to, Node* from) {
         addTo = from;
 
     if (std::any_of(addTo->connections.begin(), addTo->connections.end(), [to](Node* n) {return n == to;})) return false;
+
+    if (!directed && std::any_of(to->connections.begin(), to->connections.end(), [addTo](Node* n) {return n == addTo;})) return false;
 
     addTo->connections.push_back(to);
 
@@ -471,4 +480,84 @@ void GraphState::toggleConnectMode() {
         mode = Single::instance().DEFAULT_MODE;
     else
         mode = Mode::Connect;
+}
+
+std::string GraphState::getMode() const {
+    std::string ret;
+
+    switch (mode) {
+        case Edit:
+            ret = "Edit";
+            break;
+        case Connect:
+            ret = "Connect";
+            break;
+        case View:
+            ret = "View";
+            break;
+        case Typing:
+            ret = "Name";
+            break;
+    }
+
+    if (forceMode)
+        ret += " (Force)";
+
+    return ret;
+}
+
+void GraphState::physicsUpdate() {
+    Single& single = Single::instance();
+
+    auto mag = [](sf::Vector2f vc) {
+        return (float)sqrt(pow(vc.x, 2) + pow(vc.y, 2));
+    };
+
+    auto velVectorRep = [&single, this](Node* one, Node* two) {
+        return sf::Vector2f(one->x - two->x, one->y - two->y)*single.REP_CONST/(float)pow(fmax(distance(one, two), 0.5), 3);};
+
+    auto velVectorSpring = [&single, this, mag](Node* one, Node* two) {
+        sf::Vector2f unit(two->x - one->x, two->y - one->y);
+        unit /= mag(unit);
+        sf::Vector2f spring = unit*single.SPRING_CONST*((float)pow(fmax(distance(one, two), 0.5)- single.SPRING_REST_LEN, 2))/(float)fmax(distance(one, two), 0.5);
+        float sign = ((fmax(distance(one, two), 0.5) > single.SPRING_REST_LEN) ? 1.0f : -1.0f);
+
+        return spring*sign;
+    };
+
+    for (Node* node1 : nodes) {
+        for (Node* node2 : nodes) {
+            if (node1 != node2) {
+                node1->velocity += velVectorRep(node1, node2);
+            }
+        }
+
+        for (Node* cons : node1->connections) {
+            node1->velocity += velVectorSpring(node1, cons);
+            cons->velocity += velVectorSpring(cons, node1);
+
+            if (single.SPRING_FRICTION >= mag(node1->velocity))
+                node1->velocity = sf::Vector2f(0, 0);
+            else
+                node1->velocity -= (node1->velocity/mag(node1->velocity))*single.SPRING_FRICTION;
+
+            if (single.SPRING_FRICTION >= mag(cons->velocity))
+                cons->velocity = sf::Vector2f(0, 0);
+            else
+                cons->velocity -= (cons->velocity/mag(cons->velocity))*single.SPRING_FRICTION;
+        }
+    }
+
+    for (Node* node : nodes) {
+        node->x += node->velocity.x * single.DELTA_TIME;
+        node->y += node->velocity.y * single.DELTA_TIME;
+    }
+}
+
+float GraphState::distance(Node *one, Node *two) {
+    return sqrt(pow(one->x-two->x, 2)+pow(one->y-two->y, 2));
+}
+
+void GraphState::toggleForce() {
+    forceMode = !forceMode;
 }

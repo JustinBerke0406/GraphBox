@@ -44,6 +44,8 @@ private:
     std::vector<Node*> nodes;
 
     Node* selectedNode = nullptr;
+
+    int textBlinker = 0;
 public:
     GraphState() = default;
 
@@ -64,9 +66,11 @@ public:
     int nodeCount();
 
     bool selectNode(sf::Event::MouseButtonEvent event);
-    void deselectNode();
-    bool toggleNode(sf::Event::MouseButtonEvent event);
+    bool selectNode(Node* node);
 
+    void deselectNode();
+
+    bool toggleNode(sf::Event::MouseButtonEvent event);
     bool toggleNode(Node* node);
 
     bool wouldSelect(sf::Event::MouseButtonEvent event);
@@ -74,12 +78,14 @@ public:
     bool cursorOverClickable();
 
     bool isLabelTaken(const std::string& str);
+    bool isLabelTaken(const std::string& str, Node* exc);
 
     bool addConnection(Node* to, Node* from = nullptr);
     bool removeConnection(Node* to, Node* from = nullptr);
 
     void toggleDirectedMode();
     void toggleConnectMode();
+    void toggleForce();
 
     bool isNodeSelected();
 
@@ -89,11 +95,19 @@ public:
     void changeNodePosition(Node* node, sf::Vector2i mousePos);
     void changeNodePositionLocally(Node* node, sf::Vector2f pos);
 
+    float distance(Node* one, Node* two);
+
+    void physicsUpdate();
+
+    [[nodiscard]] std::string getMode() const;
+
     enum Mode { Edit, Connect, View, Typing };
 
     Mode mode = Mode::Edit;
 
-    bool directed = 0;
+    bool directed = false;
+    bool errorLabel = false;
+    bool forceMode = false;
 
     ~GraphState();
 };
