@@ -565,3 +565,12 @@ void GraphState::toggleForce() {
 std::vector<Node *> GraphState::getNodes() {
     return nodes;
 }
+
+int GraphState::getNodeIndex(Node *node) {
+    for (int i = 0; i < nodes.size(); i++) {
+        if (node == nodes[i])
+            return i + 1;
+    }
+
+    return -1;
+}

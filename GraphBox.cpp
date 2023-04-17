@@ -267,77 +267,143 @@ void print() {
 
     auto nodes = single.state->getNodes();
 
-    auto doQuote = [](const std::string& str) {
-        for (auto c : str) {
-            if (isspace(c))
-                return "\"" + str + "\"";
-        }
-
-        return str;
-    };
-
-    if (single.state->directed) {
-        std::vector<std::pair<std::string, std::string>> combo;
-
-        bool dup;
-
-        for (auto& node : nodes) {
-            for (Node* n : node->connections)
-                combo.emplace_back(node->label, n->label);
-        }
-
-        for (Node* n : nodes) {
-            if (n->connections.empty()) {
-                dup = false;
-
-                for (const std::pair<std::string, std::string> &p: combo)
-                    if (p.first == n->label || p.second == n->label) dup = true;
-
-                if (!dup)
-                    list += doQuote(n->label) + "\n";
+    if (!single.indexOrdering) {
+        auto doQuote = [](const std::string &str) {
+            for (auto c: str) {
+                if (isspace(c))
+                    return "\"" + str + "\"";
             }
-        }
 
-        for (const auto& p : combo)
-            list += doQuote(p.first) + " " + doQuote(p.second) + "\n";
+            return str;
+        };
+
+        if (single.state->directed) {
+            std::vector<std::pair<std::string, std::string>> combo;
+
+            bool dup;
+
+            for (auto &node: nodes) {
+                for (Node *n: node->connections)
+                    combo.emplace_back(node->label, n->label);
+            }
+
+            for (Node *n: nodes) {
+                if (n->connections.empty()) {
+                    dup = false;
+
+                    for (const std::pair<std::string, std::string> &p: combo)
+                        if (p.first == n->label || p.second == n->label) dup = true;
+
+                    if (!dup)
+                        list += doQuote(n->label) + "\n";
+                }
+            }
+
+            for (const auto &p: combo)
+                list += doQuote(p.first) + " " + doQuote(p.second) + "\n";
+        } else {
+            auto cmp = [](std::pair<std::string, std::string> a, std::pair<std::string, std::string> b) {
+                return (a.first == b.first && a.second == b.second) || (a.first == b.second && a.second == b.first);
+            };
+
+            std::vector<std::pair<std::string, std::string>> combo;
+
+            bool dup;
+
+            for (auto &node: nodes) {
+                for (Node *n: node->connections) {
+                    std::pair<std::string, std::string> a1(node->label, n->label);
+
+                    dup = false;
+
+                    for (const std::pair<std::string, std::string> &p: combo)
+                        if (cmp(p, a1)) dup = true;
+
+                    if (!dup)
+                        combo.push_back(a1);
+                }
+            }
+
+            for (Node *n: nodes) {
+                if (n->connections.empty()) {
+                    dup = false;
+
+                    for (const std::pair<std::string, std::string> &p: combo)
+                        if (p.first == n->label || p.second == n->label) dup = true;
+
+                    if (!dup)
+                        list += doQuote(n->label) + "\n";
+                }
+            }
+
+            for (const auto &p: combo)
+                list += doQuote(p.first) + " " + doQuote(p.second) + "\n";
+        }
     }
     else {
-        auto cmp = [](std::pair<std::string, std::string> a, std::pair<std::string, std::string> b) {
+        auto cmp = [](std::pair<Node*, Node*> a, std::pair<Node*, Node*> b) {
             return (a.first == b.first && a.second == b.second) || (a.first == b.second && a.second == b.first);
         };
 
-        std::vector<std::pair<std::string, std::string>> combo;
+        std::vector<std::pair<Node*, Node*>> combo;
 
-        bool dup;
+        if (single.state->directed) {
+            bool dup;
 
-        for (auto& node : nodes) {
-            for (Node* n : node->connections) {
-                std::pair<std::string, std::string> a1(node->label, n->label);
-
-                dup = false;
-
-                for (const std::pair<std::string, std::string>& p : combo)
-                    if (cmp(p, a1)) dup = true;
-
-                if (!dup)
-                    combo.push_back(a1);
+            for (auto &node: nodes) {
+                for (Node *n: node->connections)
+                    combo.emplace_back(node, n);
             }
-        }
 
-        for (Node* n : nodes) {
-            if (n->connections.empty()) {
-                dup = false;
+            for (Node *n: nodes) {
+                if (n->connections.empty()) {
+                    dup = false;
 
-                for (const std::pair<std::string, std::string> &p: combo)
-                    if (p.first == n->label || p.second == n->label) dup = true;
+                    for (auto &p: combo)
+                        if (p.first == n || p.second == n) dup = true;
 
-                if (!dup)
-                    list += doQuote(n->label) + "\n";
+                    if (!dup)
+                        list += std::to_string(single.state->getNodeIndex(n)) + "\n";
+                }
             }
-        }
 
-        for (const auto& p : combo)
-            list += doQuote(p.first) + " " + doQuote(p.second) + "\n";
+            for (const auto &p: combo)
+                list += "(" + std::to_string(single.state->getNodeIndex(p.first)) + "," +
+                        std::to_string(single.state->getNodeIndex(p.second)) + ")\n";
+        }
+        else {
+            bool dup;
+
+            for (auto &node: nodes) {
+                for (Node *n: node->connections) {
+                    std::pair<Node*, Node*> a1(node, n);
+
+                    dup = false;
+
+                    for (const auto &p: combo)
+                        if (cmp(p, a1)) dup = true;
+
+                    if (!dup)
+                        combo.push_back(a1);
+                }
+            }
+
+            for (Node *n: nodes) {
+                if (n->connections.empty()) {
+                    dup = false;
+
+                    for (const auto &p: combo)
+                        if (p.first == n || p.second == n) dup = true;
+
+                    if (!dup)
+                        list += std::to_string(single.state->getNodeIndex(n)) + "\n";
+                }
+            }
+
+            for (const auto &p: combo)
+                list += "(" + std::to_string(single.state->getNodeIndex(p.first)) + "," +
+                        std::to_string(single.state->getNodeIndex(p.second)) + ")\n";
+        }
     }
 
     auto out = std::ofstream(single.OUTPUT_FILE + std::to_string(single.files) + ((single.state->directed) ? "_Directed" : "") + ".txt");

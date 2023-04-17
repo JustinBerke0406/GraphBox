@@ -40,6 +40,8 @@ public:
 
     int files = 0;
 
+    bool indexOrdering = true;
+
     sf::RenderWindow window;
     GraphState* state;
     sf::Font font;

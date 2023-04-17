@@ -99,6 +99,8 @@ public:
 
     std::vector<Node*> getNodes();
 
+    int getNodeIndex(Node* node);
+
     void physicsUpdate();
 
     [[nodiscard]] std::string getMode() const;
