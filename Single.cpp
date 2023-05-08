@@ -9,7 +9,7 @@ Single::Single() {
 
     window.setFramerateLimit(60);
 
-    if (!font.loadFromFile("arial.ttf"))
+    if (!font.loadFromFile("resources/arial.ttf"))
         std::cout << "Unable to load arial.ttf";
 }
 

@@ -12,7 +12,7 @@ public:
         return inst;
     }
 
-    const float ZOOM_SPEED = 1.05f, MOVE_SPEED = 0.35f;
+    const float ZOOM_SPEED = 1.05f, MOVE_SPEED = 0.35f, WHEEL_SENS = 1.3f;
 
     const sf::Color NODE_COLOR = sf::Color(240, 240, 240),
                     HIGHLIGHT_COLOR = sf::Color(240, 233, 121),

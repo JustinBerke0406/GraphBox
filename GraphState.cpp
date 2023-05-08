@@ -12,8 +12,8 @@ void GraphState::PositionGrid::zoom(float scale, float x, float y) {
     zoomScale *= scale;
 }
 
-void GraphState::PositionGrid::zoom(float scale, sf::Event::MouseButtonEvent buttonEvent) {
-    std::array<float, 2> newPos = gl_loc(buttonEvent);
+void GraphState::PositionGrid::zoom(float scale, sf::Event::MouseWheelScrollEvent buttonEvent) {
+    std::array<float, 2> newPos = gl_loc(buttonEvent.x, buttonEvent.y);
 
     zoom(scale, newPos[0], newPos[1]);
 }
@@ -560,6 +560,11 @@ float GraphState::distance(Node *one, Node *two) {
 
 void GraphState::toggleForce() {
     forceMode = !forceMode;
+
+    if (!forceMode) {
+        for (Node* n : nodes)
+            n->velocity = sf::Vector2f(0, 0);
+    }
 }
 
 std::vector<Node *> GraphState::getNodes() {

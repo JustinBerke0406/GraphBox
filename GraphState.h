@@ -20,7 +20,7 @@ private:
 
         void zoom(float scale);
         void zoom(float scale, float x, float y);
-        void zoom(float scale, sf::Event::MouseButtonEvent buttonEvent);
+        void zoom(float scale, sf::Event::MouseWheelScrollEvent buttonEvent);
 
         void pan(float x, float y);
         void panRelative(float x, float y);

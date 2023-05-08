@@ -1,3 +1,4 @@
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <unordered_set>
@@ -22,6 +23,7 @@ int launch() {
     bool readyToSelect = false;
     bool readyDouble = false;
     bool activateDouble = false;
+    bool startDrag = false;
 
     int timeMouseHeld = 0;
     int doubleClickTimer = 0;
@@ -29,6 +31,7 @@ int launch() {
     std::string prevLabel;
 
     sf::Vector2f offset;
+    sf::Vector2f dragPos;
     Node* draggedNode = nullptr;
 
     // For loop to keep window open
@@ -74,6 +77,25 @@ int launch() {
                 readyToSelect = false;
 
                 readyDouble = true;
+            }
+        }
+
+        if (startDrag) {
+            if (sf::Mouse::isButtonPressed(sf::Mouse::Middle)) {
+                auto pos = single.state->getPositionGrid().gl_loc(sf::Mouse::getPosition(single.window));
+
+                sf::Vector2f nPos = sf::Vector2f(pos[0], pos[1]);
+
+                auto delta = dragPos - nPos;
+
+                single.state->getPositionGrid().pan(delta.x, delta.y);
+
+                pos = single.state->getPositionGrid().gl_loc(sf::Mouse::getPosition(single.window));
+
+                dragPos = sf::Vector2f(pos[0], pos[1]);
+            }
+            else {
+                startDrag = false;
             }
         }
 
@@ -176,6 +198,15 @@ int launch() {
                                     single.state->deselectNode();
                             }
                         }
+                        else if (event.mouseButton.button == sf::Mouse::Middle) {
+                            if (!startDrag) {
+                                startDrag = true;
+
+                                auto pos = single.state->getPositionGrid().gl_loc(event.mouseButton);
+
+                                dragPos = sf::Vector2f(pos[0], pos[1]);
+                            }
+                        }
                     }
                 }
             }
@@ -233,6 +264,9 @@ int launch() {
             }
             else if (event.type == sf::Event::MouseMoved) {
                 readyToSelect = false;
+            }
+            else if (event.type == sf::Event::MouseWheelScrolled) {
+                single.state->getPositionGrid().zoom(std::pow(single.ZOOM_SPEED*single.WHEEL_SENS, event.mouseWheelScroll.delta), event.mouseWheelScroll);
             }
         }
     }
