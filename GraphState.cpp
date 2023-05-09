@@ -110,6 +110,16 @@ void GraphState::PositionGrid::panRelative(float x, float y) {
     yOrigin += y / (zoomScale / 100);
 }
 
+std::array<sf::Vector2f, 2> GraphState::PositionGrid::getCorners() {
+    sf::Vector2f org(xOrigin, yOrigin);
+
+    auto pos = gl_loc(WIDTH, HEIGHT);
+
+    sf::Vector2f bottom(pos[0], pos[1]);
+
+    return std::array<sf::Vector2f, 2> {org, bottom};
+}
+
 GraphState::PositionGrid &GraphState::getPositionGrid() {
     return positionGrid;
 }
@@ -500,6 +510,9 @@ std::string GraphState::getMode() const {
             break;
     }
 
+    if (densityMode)
+        ret += " (Density Map)";
+
     if (forceMode)
         ret += " (Force)";
 
@@ -578,4 +591,69 @@ int GraphState::getNodeIndex(Node *node) {
     }
 
     return -1;
+}
+
+void GraphState::toggleDensity() {
+    densityMode = !densityMode;
+}
+
+void GraphState::drawDensityMap() {
+    sf::VertexArray points(sf::Points, getPositionGrid().WIDTH * getPositionGrid().HEIGHT);
+    int index = 0;
+
+    for (int x = 0; x < getPositionGrid().WIDTH; x++) {
+        for (int y = 0; y < getPositionGrid().HEIGHT; y++) {
+            sf::Vector2i pos(x, y);
+
+            if (nodeAt(pos) != nullptr) continue;
+
+            float weight = 0;
+
+            for (Node* n : nodes)
+                weight += 1/pow(distance(n, pos), 2);
+
+            points[index].position = sf::Vector2f(x+0.5f, y+0.5f);
+            points[index].color = gradient(weight);
+
+            index++;
+        }
+    }
+
+    Single::instance().window.draw(points);
+}
+
+float GraphState::distance(Node *one, sf::Vector2i two) {
+    auto pos = getPositionGrid().gl_loc(two);
+
+    return sqrt(pow(one->x-pos[0],2)+pow(one->y-pos[1],2));
+}
+
+sf::Color GraphState::gradient(float weight) {
+    float alpha = (pow(weight, 0.75)*255/2.0f);
+    //float alpha = weight * 255 / 8.0f;
+
+    sf::Vector3i oneV(0, 200, 54);
+
+    sf::Vector3i twoV(240, 240, 0);
+
+    if (alpha <= 255)
+        return sf::Color(oneV.x, oneV.y, oneV.z, fmin(alpha,255));
+
+    sf::Vector3i delta1 = twoV - oneV;
+
+    alpha -= 255;
+
+    if (alpha <= 255)
+        return sf::Color(oneV.x + alpha/255.0f * delta1.x, oneV.y + alpha/255.0f * delta1.y, oneV.z + alpha/255.0f * delta1.z);
+
+    alpha -= 255;
+
+    sf::Vector3i threeV(255, 0, 0);
+
+    sf::Vector3i delta2 = threeV - twoV;
+
+    if (alpha <= 255)
+        return sf::Color(twoV.x + alpha/255.0f * delta2.x, twoV.y + alpha/255.0f * delta2.y, twoV.z + alpha/255.0f * delta2.z);
+
+    return sf::Color::Red;
 }

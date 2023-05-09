@@ -113,7 +113,6 @@ int launch() {
 
                     if (!offsetSet) {
                         auto loMouse = single.state->getPositionGrid().gl_loc(mousePos);
-                        auto glOff = single.state->getPositionGrid().loc_gl(loMouse[0] - draggedNode->x, loMouse[1] - draggedNode->y);
 
                         offset = sf::Vector2f(loMouse[0] - draggedNode->x, loMouse[1] - draggedNode->y);
                     }
@@ -121,6 +120,8 @@ int launch() {
                     offsetSet = true;
 
                     onMouseHeld(offset, draggedNode);
+
+                    draggedNode->velocity = sf::Vector2f(0, 0);
                 }
             }
         }
@@ -218,6 +219,8 @@ int launch() {
                         single.state->toggleDirectedMode();
                     else if (event.key.code == sf::Keyboard::F)
                         single.state->toggleForce();
+                    else if (event.key.code == sf::Keyboard::M)
+                        single.state->toggleDensity();
                     else if (event.key.code == sf::Keyboard::E)
                         single.state->mode = GraphState::Mode::Edit;
                     else if (event.key.code == sf::Keyboard::P)
@@ -288,6 +291,9 @@ void render() {
     Single& single = Single::instance();
 
     sf::RenderWindow& window = single.window;
+
+    if (single.state->densityMode)
+        single.state->drawDensityMap();
 
     single.state->drawNodes();
 }

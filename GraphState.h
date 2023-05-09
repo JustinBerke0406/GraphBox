@@ -37,6 +37,8 @@ private:
         void transform(sf::Vertex* ones, int count);
 
         void updateResizeData(sf::Event::SizeEvent size);
+
+        std::array<sf::Vector2f, 2> getCorners();
     };
 
     PositionGrid positionGrid;
@@ -86,6 +88,7 @@ public:
     void toggleDirectedMode();
     void toggleConnectMode();
     void toggleForce();
+    void toggleDensity();
 
     bool isNodeSelected();
 
@@ -96,6 +99,7 @@ public:
     void changeNodePositionLocally(Node* node, sf::Vector2f pos);
 
     float distance(Node* one, Node* two);
+    float distance(Node* one, sf::Vector2i two);
 
     std::vector<Node*> getNodes();
 
@@ -112,6 +116,11 @@ public:
     bool directed = false;
     bool errorLabel = false;
     bool forceMode = false;
+    bool densityMode = false;
 
     ~GraphState();
+
+    void drawDensityMap();
+
+    sf::Color gradient(float weight);
 };
