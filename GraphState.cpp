@@ -38,7 +38,7 @@ std::array<float, 2> GraphState::PositionGrid::gl_loc(sf::Event::MouseButtonEven
     return newPos;
 }
 
-std::array<float, 2> GraphState::PositionGrid::gl_loc(sf::Vector2<int> pos) const {
+std::array<float, 2> GraphState::PositionGrid::gl_loc(sf::Vector2<int> &pos) const {
     return gl_loc(pos.x, pos.y);
 }
 
@@ -221,7 +221,9 @@ void GraphState::drawNodes() {
         && selectedNode != nullptr
         && nodeAt(sf::Mouse::getPosition(single.window)) != selectedNode) {
 
-        auto mPos = getPositionGrid().gl_loc(sf::Mouse::getPosition(single.window));
+        auto mousePos = sf::Mouse::getPosition(single.window);
+
+        auto mPos = getPositionGrid().gl_loc(mousePos);
 
         drawEdge(sf::Vector2f(selectedNode->x, selectedNode->y), sf::Vector2f(mPos[0], mPos[1]), true, false, 0);
     }
@@ -598,62 +600,72 @@ void GraphState::toggleDensity() {
 }
 
 void GraphState::drawDensityMap() {
-    sf::VertexArray points(sf::Points, getPositionGrid().WIDTH * getPositionGrid().HEIGHT);
     int index = 0;
+    float weight, dst;
 
     for (int x = 0; x < getPositionGrid().WIDTH; x++) {
         for (int y = 0; y < getPositionGrid().HEIGHT; y++) {
             sf::Vector2i pos(x, y);
 
-            if (nodeAt(pos) != nullptr) continue;
+            weight = 0;
 
-            float weight = 0;
+            for (Node* n : nodes) {
+                dst = distanceSq(n, pos);
 
-            for (Node* n : nodes)
-                weight += 1/pow(distance(n, pos), 2);
+                if (dst <= 0.25)
+                    continue;
 
-            points[index].position = sf::Vector2f(x+0.5f, y+0.5f);
-            points[index].color = gradient(weight);
+                weight += 1 / dst;
+            }
 
-            index++;
+            points[index].position = sf::Vector2f(x, y);
+            points[index++].color = gradient(weight);
         }
     }
 
     Single::instance().window.draw(points);
 }
 
-float GraphState::distance(Node *one, sf::Vector2i two) {
+float GraphState::distanceSq(Node* &one, sf::Vector2i& two) {
     auto pos = getPositionGrid().gl_loc(two);
 
-    return sqrt(pow(one->x-pos[0],2)+pow(one->y-pos[1],2));
+    float dif1 = one->x-pos[0];
+    float dif2 = one->y-pos[1];
+
+    return (dif1*dif1)+(dif2*dif2);
 }
 
 sf::Color GraphState::gradient(float weight) {
-    float alpha = (pow(weight, 0.75)*255/2.0f);
-    //float alpha = weight * 255 / 8.0f;
+    Single &single = Single::instance();
 
-    sf::Vector3i oneV(0, 200, 54);
+    //float alpha = pow(weight, 0.75)*255/2.0f;
+    float alpha = weight * 85;
 
-    sf::Vector3i twoV(240, 240, 0);
-
-    if (alpha <= 255)
-        return sf::Color(oneV.x, oneV.y, oneV.z, fmin(alpha,255));
-
-    sf::Vector3i delta1 = twoV - oneV;
-
-    alpha -= 255;
+    sf::Vector3i &oneV = single.gradOne;
+    sf::Vector3i &twoV = single.gradTwo;
 
     if (alpha <= 255)
-        return sf::Color(oneV.x + alpha/255.0f * delta1.x, oneV.y + alpha/255.0f * delta1.y, oneV.z + alpha/255.0f * delta1.z);
+        return {static_cast<sf::Uint8>(oneV.x), static_cast<sf::Uint8>(oneV.y), static_cast<sf::Uint8>(oneV.z), static_cast<sf::Uint8>(fmin(alpha,255))};
+    else if (alpha <= 510) {
+        sf::Vector3i delta1 = twoV - oneV;
 
-    alpha -= 255;
+        alpha -= 255;
 
-    sf::Vector3i threeV(255, 0, 0);
+        return {static_cast<sf::Uint8>(oneV.x + alpha / 255.0f * delta1.x),
+                static_cast<sf::Uint8>(oneV.y + alpha / 255.0f * delta1.y),
+                static_cast<sf::Uint8>(oneV.z + alpha / 255.0f * delta1.z)};
+    }
+    else if (alpha <= 765) {
+        alpha -= 510;
 
-    sf::Vector3i delta2 = threeV - twoV;
+        sf::Vector3i &threeV = single.gradThree;
 
-    if (alpha <= 255)
-        return sf::Color(twoV.x + alpha/255.0f * delta2.x, twoV.y + alpha/255.0f * delta2.y, twoV.z + alpha/255.0f * delta2.z);
+        sf::Vector3i delta2 = threeV - twoV;
+
+        return {static_cast<sf::Uint8>(twoV.x + alpha / 255.0f * delta2.x),
+                static_cast<sf::Uint8>(twoV.y + alpha / 255.0f * delta2.y),
+                static_cast<sf::Uint8>(twoV.z + alpha / 255.0f * delta2.z)};
+    }
 
     return sf::Color::Red;
 }

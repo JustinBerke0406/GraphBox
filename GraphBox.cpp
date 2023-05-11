@@ -82,7 +82,8 @@ int launch() {
 
         if (startDrag) {
             if (sf::Mouse::isButtonPressed(sf::Mouse::Middle)) {
-                auto pos = single.state->getPositionGrid().gl_loc(sf::Mouse::getPosition(single.window));
+                auto tempPos = sf::Mouse::getPosition(single.window);
+                auto pos = single.state->getPositionGrid().gl_loc(tempPos);
 
                 sf::Vector2f nPos = sf::Vector2f(pos[0], pos[1]);
 
@@ -90,7 +91,7 @@ int launch() {
 
                 single.state->getPositionGrid().pan(delta.x, delta.y);
 
-                pos = single.state->getPositionGrid().gl_loc(sf::Mouse::getPosition(single.window));
+                pos = single.state->getPositionGrid().gl_loc(tempPos);
 
                 dragPos = sf::Vector2f(pos[0], pos[1]);
             }
@@ -281,7 +282,8 @@ void onMouseHeld(sf::Vector2f offset, Node* node) {
     Single& single = Single::instance();
 
     if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-        auto pos = single.state->getPositionGrid().gl_loc(sf::Mouse::getPosition(single.window));
+        auto tempPos = sf::Mouse::getPosition(single.window);
+        auto pos = single.state->getPositionGrid().gl_loc(tempPos);
         sf::Vector2f ms(pos[0], pos[1]);
         single.state->changeNodePositionLocally(node, ms - offset);
     }

@@ -11,6 +11,8 @@ Single::Single() {
 
     if (!font.loadFromFile("resources/arial.ttf"))
         std::cout << "Unable to load arial.ttf";
+
+    state->points=sf::VertexArray(sf::Points, state->getPositionGrid().WIDTH * state->getPositionGrid().HEIGHT);
 }
 
 Single::~Single() {

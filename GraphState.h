@@ -26,7 +26,7 @@ private:
         void panRelative(float x, float y);
 
         [[nodiscard]] std::array<float, 2> gl_loc(int x, int y) const;
-        [[nodiscard]] std::array<float, 2> gl_loc(sf::Vector2<int> pos) const;
+        [[nodiscard]] std::array<float, 2> gl_loc(sf::Vector2<int> &pos) const;
         [[nodiscard]] std::array<float, 2> gl_loc(sf::Event::MouseButtonEvent buttonEvent) const;
 
         [[nodiscard]] std::array<int, 2> loc_gl(float x, float y) const;
@@ -99,7 +99,7 @@ public:
     void changeNodePositionLocally(Node* node, sf::Vector2f pos);
 
     float distance(Node* one, Node* two);
-    float distance(Node* one, sf::Vector2i two);
+    float distanceSq(Node* &one, sf::Vector2i& two);
 
     std::vector<Node*> getNodes();
 
@@ -117,6 +117,8 @@ public:
     bool errorLabel = false;
     bool forceMode = false;
     bool densityMode = false;
+
+    sf::VertexArray points;
 
     ~GraphState();
 

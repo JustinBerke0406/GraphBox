@@ -46,5 +46,9 @@ public:
     GraphState* state;
     sf::Font font;
 
+    sf::Vector3i gradOne = {0, 200, 54};
+    sf::Vector3i gradTwo = {240, 240, 0};
+    sf::Vector3i gradThree = {255, 0, 0};
+
     ~Single();
 };
