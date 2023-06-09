@@ -120,6 +120,10 @@ std::array<sf::Vector2f, 2> GraphState::PositionGrid::getCorners() {
     return std::array<sf::Vector2f, 2> {org, bottom};
 }
 
+std::array<float, 2> GraphState::PositionGrid::getResize() const {
+    return std::array<float, 2> {xResize, yResize};
+}
+
 GraphState::PositionGrid &GraphState::getPositionGrid() {
     return positionGrid;
 }
@@ -599,12 +603,19 @@ void GraphState::toggleDensity() {
     densityMode = !densityMode;
 }
 
-void GraphState::drawDensityMap() {
+void GraphState::drawDensityMap() { //TODO: Optimize density map
     int index = 0;
     float weight, dst;
 
-    for (int x = 0; x < getPositionGrid().WIDTH; x++) {
-        for (int y = 0; y < getPositionGrid().HEIGHT; y++) {
+    auto resize = positionGrid.getResize();
+
+    points.resize(positionGrid.WIDTH * positionGrid.HEIGHT * resize[0] * resize[1]);
+
+    int nWidth = positionGrid.WIDTH * resize[0];
+    int nHeight = positionGrid.HEIGHT * resize[1];
+
+    for (int x = 0; x < nWidth; x++) {
+        for (int y = 0; y < nHeight; y++) {
             sf::Vector2i pos(x, y);
 
             weight = 0;
@@ -618,7 +629,7 @@ void GraphState::drawDensityMap() {
                 weight += 1 / dst;
             }
 
-            points[index].position = sf::Vector2f(x, y);
+            points[index].position = sf::Vector2f(x / resize[0], y / resize[1]);
             points[index++].color = gradient(weight);
         }
     }

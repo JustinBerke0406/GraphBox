@@ -31,6 +31,8 @@ private:
 
         [[nodiscard]] std::array<int, 2> loc_gl(float x, float y) const;
 
+        [[nodiscard]] std::array<float, 2> getResize() const;
+
         void transform(sf::Transformable& shape);
         void transform(sf::CircleShape& shape);
         void transform(sf::Text &shape);
