@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <unordered_set>
+#include <thread>
 #include "GraphBox.h"
 #include "Single.h"
 
@@ -295,7 +296,7 @@ void render() {
     sf::RenderWindow& window = single.window;
 
     if (single.state->densityMode)
-        single.state->drawDensityMap();
+        single.state->densityThreadCaller();
 
     single.state->drawNodes();
 }

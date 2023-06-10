@@ -6,6 +6,7 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/Graphics/CircleShape.hpp>
 #include <SFML/Graphics/Text.hpp>
+#include <thread>
 #include "graph/Node.h"
 
 class GraphState {
@@ -122,9 +123,10 @@ public:
 
     sf::VertexArray points;
 
-    ~GraphState();
-
     void drawDensityMap();
+    void densityThreadCaller();
+
+    ~GraphState();
 
     sf::Color gradient(float weight);
 };

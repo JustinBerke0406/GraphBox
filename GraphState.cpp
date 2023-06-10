@@ -1,6 +1,7 @@
 #include "GraphState.h"
 
 #include <utility>
+#include <iostream>
 #include "Single.h"
 
 void GraphState::PositionGrid::zoom(float scale, float x, float y) {
@@ -603,7 +604,7 @@ void GraphState::toggleDensity() {
     densityMode = !densityMode;
 }
 
-void GraphState::drawDensityMap() { //TODO: Optimize density map
+void GraphState::drawDensityMap() {
     int index = 0;
     float weight, dst;
 
@@ -635,6 +636,60 @@ void GraphState::drawDensityMap() { //TODO: Optimize density map
     }
 
     Single::instance().window.draw(points);
+}
+
+void GraphState::densityThreadCaller() {
+    Single &single = Single::instance();
+
+    auto resize = single.state->getPositionGrid().getResize();
+
+    float invResizeX = 1 / resize[0], invResizeY = 1 / resize[1];
+
+    single.state->points.resize(single.state->getPositionGrid().WIDTH * single.state->getPositionGrid().HEIGHT * resize[0] * resize[1]);
+
+    int segments = Single::instance().THREADS;
+
+    int totalWidth = single.state->getPositionGrid().WIDTH * resize[0];
+    int nHeight = single.state->getPositionGrid().HEIGHT * resize[1];
+
+    auto drawDensity = [&single, &nHeight, &invResizeX, &invResizeY, &totalWidth](int segment, int maxSegments) {
+        float weight, dst;
+        int index = segment;
+
+        for (int x = segment; x < totalWidth; x += maxSegments) {
+            float xSize = x * invResizeX;
+
+            for (int y = 0; y < nHeight; y++) {
+                sf::Vector2i pos(x, y);
+
+                weight = 0;
+
+                for (Node* n : single.state->getNodes()) {
+                    dst = single.state->distanceSq(n, pos);
+
+                    if (dst <= 0.25)
+                        continue;
+
+                    weight += 1 / dst;
+                }
+
+                single.state->points[index].position = sf::Vector2f(xSize, y * invResizeY);
+                single.state->points[index].color = single.state->gradient(weight);
+
+                index += maxSegments;
+            }
+        }
+    };
+
+    std::thread threads[segments];
+
+    for (int i = 0; i < segments; i++)
+        threads[i] = std::thread(drawDensity, i, segments);
+
+    for (int i = 0; i < segments; i++)
+        threads[i].join();
+
+    Single::instance().window.draw(Single::instance().state->points);
 }
 
 float GraphState::distanceSq(Node* &one, sf::Vector2i& two) {

@@ -34,6 +34,8 @@ public:
                 SPRING_FRICTION = 0.01f,
                 DELTA_TIME = 0.01f;
 
+    const int THREADS = 15;
+
     const GraphState::Mode DEFAULT_MODE = GraphState::Mode::Edit;
 
     const std::string OUTPUT_FILE = "GraphBox_Save_";
