@@ -1,5 +1,6 @@
 #include "GraphState.h"
 
+#include <cmath>
 #include <utility>
 #include <iostream>
 #include "Single.h"
@@ -190,7 +191,7 @@ void GraphState::drawNodes() {
         sf::CircleShape circ;
         circ.setRadius(0.5f);
         circ.setOrigin(circ.getLocalBounds().width/2, circ.getLocalBounds().height/2);
-        circ.setOutlineThickness(0.02f);
+        circ.setOutlineThickness(-0.02f);
         circ.setOutlineColor(sf::Color::Black);
         circ.setFillColor((n == selectedNode) ? ((!errorLabel) ? single.HIGHLIGHT_COLOR : single.ERROR_COLOR) : single.NODE_COLOR);
         circ.setPosition(n->x, n->y);
@@ -520,8 +521,13 @@ std::string GraphState::getMode() const {
     if (densityMode)
         ret += " (Density Map)";
 
-    if (forceMode)
-        ret += " (Force)";
+    if (forceMode) {
+        if (inverseForce)
+            ret += " (Force - Attraction)";
+        else {
+            ret += " (Force - Repulsion)";
+        }
+    }
 
     return ret;
 }
@@ -534,24 +540,20 @@ void GraphState::physicsUpdate() {
     };
 
     auto velVectorRep = [&single, this](Node* one, Node* two) {
-        return sf::Vector2f(one->x - two->x, one->y - two->y)*single.REP_CONST/(float)pow(fmax(distance(one, two), 0.5), 3);};
+        auto dist = distance(one, two);
+        auto unitVector = sf::Vector2f(one->x - two->x, one->y - two->y) / dist;
+        return unitVector*single.REP_CONST/(float)pow(fmax(dist, 1), 2);};
 
     auto velVectorSpring = [&single, this, mag](Node* one, Node* two) {
         sf::Vector2f unit(two->x - one->x, two->y - one->y);
         unit /= mag(unit);
-        sf::Vector2f spring = unit*single.SPRING_CONST*((float)pow(fmax(distance(one, two), 0.5)- single.SPRING_REST_LEN, 2))/(float)fmax(distance(one, two), 0.5);
-        float sign = ((fmax(distance(one, two), 0.5) > single.SPRING_REST_LEN) ? 1.0f : -1.0f);
+        sf::Vector2f spring = unit*single.SPRING_CONST*((float)pow(fmax(distance(one, two), 1)- single.SPRING_REST_LEN, 2))/(float)fmax(distance(one, two), 1);
+        float sign = ((fmax(distance(one, two), 1) > single.SPRING_REST_LEN) ? 1.0f : -1.0f);
 
         return spring*sign;
     };
 
     for (Node* node1 : nodes) {
-        for (Node* node2 : nodes) {
-            if (node1 != node2) {
-                node1->velocity += velVectorRep(node1, node2);
-            }
-        }
-
         for (Node* cons : node1->connections) {
             node1->velocity += velVectorSpring(node1, cons);
             cons->velocity += velVectorSpring(cons, node1);
@@ -565,6 +567,44 @@ void GraphState::physicsUpdate() {
                 cons->velocity = sf::Vector2f(0, 0);
             else
                 cons->velocity -= (cons->velocity/mag(cons->velocity))*single.SPRING_FRICTION;
+        }
+
+        for (Node* node2 : nodes) {
+            if (node1 != node2) {
+                node1->velocity += velVectorRep(node1, node2) * ((inverseForce) ? -1.f : 1.f);
+            }
+        }
+
+        for (Node* node2 : nodes) {
+            if (node1 != node2) {
+                auto dist = distance(node1, node2);
+
+                if (dist <= 1) {
+                    auto vel = node1->velocity;
+                    sf::Vector2f distVec(node2->x - node1->x, node2->y - node1->y);
+                    auto unit = distVec/dist;
+
+                    /*auto rePos = distVec-unit;
+
+                    //node1->x += rePos.x;
+                    //node1->y += rePos.y;
+
+                    //node1->velocity += velVectorRep(node1, node2) / std::fmax(dist, 0.125f);*/
+
+                    if ((vel.x * unit.x) + (vel.y * unit.y) >= 0) {
+                        auto Va = node1->velocity - node2->velocity;
+                        float scale = Va.x*unit.x + Va.y*unit.y;
+
+                        sf::Vector2f Vaf = {Va.x - scale*unit.x, Va.y - scale*unit.y};
+
+                        node1->velocity = Vaf + node2->velocity;
+                        node2->velocity += scale * unit;
+                    }
+
+                    node1->velocity *= single.NORM_FRICTION;
+                    node2->velocity *= single.NORM_FRICTION;
+                }
+            }
         }
     }
 
@@ -734,4 +774,8 @@ sf::Color GraphState::gradient(float weight) {
     }
 
     return sf::Color::Red;
+}
+
+void GraphState::invertForce() {
+    inverseForce = !inverseForce;
 }

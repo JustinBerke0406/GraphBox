@@ -92,6 +92,7 @@ public:
     void toggleConnectMode();
     void toggleForce();
     void toggleDensity();
+    void invertForce();
 
     bool isNodeSelected();
 
@@ -119,6 +120,7 @@ public:
     bool directed = false;
     bool errorLabel = false;
     bool forceMode = false;
+    bool inverseForce = false;
     bool densityMode = false;
 
     sf::VertexArray points;

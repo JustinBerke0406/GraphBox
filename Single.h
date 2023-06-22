@@ -32,6 +32,7 @@ public:
                 SPRING_CONST = 1.0f,
                 SPRING_REST_LEN = 5.0f,
                 SPRING_FRICTION = 0.01f,
+                NORM_FRICTION = 0.9f,
                 DELTA_TIME = 0.01f;
 
     const int THREADS = 15;

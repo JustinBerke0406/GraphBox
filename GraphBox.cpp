@@ -194,8 +194,10 @@ int launch() {
                             }
                         }
                         else if (event.mouseButton.button == sf::Mouse::Right) {
-                            if (single.state->mode == GraphState::Mode::Edit)
+                            if (single.state->mode == GraphState::Mode::Edit) {
                                 single.state->deleteNode(single.state->nodeAt(event.mouseButton));
+                                mouseHeld = false;
+                            }
                             else if (single.state->mode == GraphState::Mode::Connect) {
                                 if (single.state->isNodeSelected())
                                     single.state->deselectNode();
@@ -221,6 +223,11 @@ int launch() {
                         single.state->toggleDirectedMode();
                     else if (event.key.code == sf::Keyboard::F)
                         single.state->toggleForce();
+                    else if (event.key.code == sf::Keyboard::I) {
+                        if (single.state->forceMode) {
+                            single.state->invertForce();
+                        }
+                    }
                     else if (event.key.code == sf::Keyboard::M)
                         single.state->toggleDensity();
                     else if (event.key.code == sf::Keyboard::E)
