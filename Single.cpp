@@ -19,7 +19,7 @@ Single::Single() {
 
     float toolHeightPerc = (float)toolViewHeight/state->getPositionGrid().HEIGHT;
 
-    defaultView.setViewport(sf::FloatRect(0.0f, 0.0f, 1.0f, 1.0f));
+    defaultView.setViewport(sf::FloatRect(0.0f, toolHeightPerc, 1.0f, 1.0f));
     toolView.setViewport(sf::FloatRect(0.0f, 0.0f, 1.0f, toolHeightPerc));
 }
 
