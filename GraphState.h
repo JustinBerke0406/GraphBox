@@ -122,6 +122,7 @@ public:
     bool forceMode = false;
     bool inverseForce = false;
     bool densityMode = false;
+    bool adjMode = false;
 
     sf::VertexArray points;
 
@@ -131,4 +132,8 @@ public:
     ~GraphState();
 
     sf::Color gradient(float weight);
+
+    void toggleAdjMode();
+
+    bool adjacentTo(const Node *pNode, const Node *mainNode);
 };

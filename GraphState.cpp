@@ -155,7 +155,6 @@ std::string GraphState::createNode(sf::Event::MouseButtonEvent event) {
     return createNode(std::to_string(nodes.size()), event);
 }
 
-
 bool GraphState::deleteNode(Node* node) {
     for (int i = 0; i < nodes.size(); i++)
         if (nodes[i] == node) {
@@ -193,7 +192,15 @@ void GraphState::drawNodes() {
         circ.setOrigin(circ.getLocalBounds().width/2, circ.getLocalBounds().height/2);
         circ.setOutlineThickness(-0.02f);
         circ.setOutlineColor(sf::Color::Black);
-        circ.setFillColor((n == selectedNode) ? ((!errorLabel) ? single.HIGHLIGHT_COLOR : single.ERROR_COLOR) : single.NODE_COLOR);
+
+        sf::Color fillColor = (n == selectedNode) ? ((!errorLabel) ? single.HIGHLIGHT_COLOR : single.ERROR_COLOR) : single.NODE_COLOR;
+
+        if (adjMode && selectedNode != nullptr) {
+            if (adjacentTo(n, selectedNode))
+                fillColor = single.ADJ_COLOR;
+        }
+
+        circ.setFillColor(fillColor);
         circ.setPosition(n->x, n->y);
 
         single.state->getPositionGrid().transform(circ);
@@ -518,6 +525,9 @@ std::string GraphState::getMode() const {
             break;
     }
 
+    if (adjMode)
+        ret += " (Adjacency)";
+
     if (densityMode)
         ret += " (Density Map)";
 
@@ -778,4 +788,24 @@ sf::Color GraphState::gradient(float weight) {
 
 void GraphState::invertForce() {
     inverseForce = !inverseForce;
+}
+
+void GraphState::toggleAdjMode() {
+    adjMode = !adjMode;
+}
+
+bool GraphState::adjacentTo(const Node *pNode, const Node *mainNode) {
+    if (pNode == mainNode)
+        return false;
+
+    for (Node* subNodes : mainNode->connections)
+        if (subNodes == pNode)
+            return true;
+
+    if (!directed)
+        for (Node* subNodes : pNode->connections)
+            if (subNodes == mainNode)
+                return true;
+
+    return false;
 }

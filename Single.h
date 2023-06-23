@@ -16,7 +16,8 @@ public:
 
     const sf::Color NODE_COLOR = sf::Color(240, 240, 240),
                     HIGHLIGHT_COLOR = sf::Color(240, 233, 121),
-                    ERROR_COLOR = sf::Color(200, 30, 30);
+                    ERROR_COLOR = sf::Color(200, 30, 30),
+                    ADJ_COLOR = sf::Color(44, 230, 2);
 
     const float EDGE_THICKNESS = 0.02f, ARROW_THICKNESS = 10.0f;
 

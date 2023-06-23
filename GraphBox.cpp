@@ -232,6 +232,8 @@ int launch() {
                         single.state->toggleDensity();
                     else if (event.key.code == sf::Keyboard::E)
                         single.state->mode = GraphState::Mode::Edit;
+                    else if (event.key.code == sf::Keyboard::A)
+                        single.state->toggleAdjMode();
                     else if (event.key.code == sf::Keyboard::P)
                         print();
                 }
