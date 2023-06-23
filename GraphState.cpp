@@ -809,3 +809,19 @@ bool GraphState::adjacentTo(const Node *pNode, const Node *mainNode) {
 
     return false;
 }
+
+void GraphState::initToolbox() {
+    Single& single = Single::instance();
+
+    single.window.setView(single.toolView);
+
+    sf::RectangleShape box(single.toolView.getSize());
+    box.setPosition(0, 0);
+    box.setFillColor(sf::Color(220, 220, 220));
+    box.setOutlineThickness(-2);
+    box.setOutlineColor(sf::Color::Black);
+
+    single.window.draw(box);
+
+    single.window.setView(single.defaultView);
+}

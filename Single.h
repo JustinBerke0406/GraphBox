@@ -54,5 +54,10 @@ public:
     sf::Vector3i gradTwo = {240, 240, 0};
     sf::Vector3i gradThree = {255, 0, 0};
 
+    const int toolViewHeight = 40;
+
+    sf::View defaultView;
+    sf::View toolView;
+
     ~Single();
 };

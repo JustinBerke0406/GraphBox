@@ -43,6 +43,7 @@ int launch() {
 
         // Render
         render();
+        single.state->initToolbox();
 
         if (single.state->forceMode)
             single.state->physicsUpdate();

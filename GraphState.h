@@ -136,4 +136,6 @@ public:
     void toggleAdjMode();
 
     bool adjacentTo(const Node *pNode, const Node *mainNode);
+
+    void initToolbox();
 };
