@@ -28,7 +28,7 @@ public:
 
     const int WINDOW_TEXT_SIZE = 16,
               WINDOW_TEXT_X_OFF = 10,
-              WINDOW_TEXT_Y_OFF = 5;
+              WINDOW_TEXT_Y_OFF = 45;
 
     const int TEXT_BLINKER_TIME = 30;
 

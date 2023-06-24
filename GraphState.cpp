@@ -121,10 +121,12 @@ void GraphState::drawNodes() {
     text.setFont(single.font);
     text.setCharacterSize(single.WINDOW_TEXT_SIZE);
     text.setFillColor(sf::Color::Black);
-    text.setPosition(single.WINDOW_TEXT_X_OFF, single.WINDOW_TEXT_Y_OFF);
+    text.setPosition(sf::Vector2f(single.WINDOW_TEXT_X_OFF, single.WINDOW_TEXT_Y_OFF));
     text.setString("Mode: " + getMode());
 
+    single.window.setView(single.window.getDefaultView());
     single.window.draw(text);
+    single.window.setView(single.defaultView);
 }
 
 int GraphState::nodeCount() {

@@ -217,6 +217,8 @@ int launch() {
                 if (single.state->mode != GraphState::Mode::Typing) {
                     if (event.key.code == sf::Keyboard::C)
                         single.state->toggleConnectMode();
+                    else if (event.key.code == sf::Keyboard::D)
+                        single.state->toggleDirectedMode();
                     else if (event.key.code == sf::Keyboard::F)
                         single.state->toggleForce();
                     else if (event.key.code == sf::Keyboard::I) {
@@ -224,8 +226,6 @@ int launch() {
                             single.state->invertForce();
                         }
                     }
-                    else if (event.key.code == sf::Keyboard::M)
-                        single.state->toggleDensity();
                     else if (event.key.code == sf::Keyboard::E)
                         single.state->mode = GraphState::Mode::Edit;
                     else if (event.key.code == sf::Keyboard::A)
