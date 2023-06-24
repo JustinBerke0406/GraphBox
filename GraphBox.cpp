@@ -217,8 +217,6 @@ int launch() {
                 if (single.state->mode != GraphState::Mode::Typing) {
                     if (event.key.code == sf::Keyboard::C)
                         single.state->toggleConnectMode();
-                    else if (event.key.code == sf::Keyboard::D)
-                        single.state->toggleDirectedMode();
                     else if (event.key.code == sf::Keyboard::F)
                         single.state->toggleForce();
                     else if (event.key.code == sf::Keyboard::I) {

@@ -574,22 +574,20 @@ void GraphState::drawDensityMap() {
 void GraphState::densityThreadCaller() {
     Single &single = Single::instance();
 
-    auto viewSize = single.defaultView.getSize();
+    auto size = single.window.getSize();
 
-    single.state->points.resize(viewSize.x * viewSize.y);
+    single.state->points.resize(size.x * size.y);
 
     int segments = Single::instance().THREADS;
 
-    int totalWidth = viewSize.x;
-    int nHeight = viewSize.y;
+    int totalWidth = size.x;
+    int nHeight = size.y;
 
     auto drawDensity = [&single, &nHeight, &totalWidth](int segment, int maxSegments) {
         float weight, dst;
         int index = segment;
 
         for (int x = segment; x < totalWidth; x += maxSegments) {
-            float xSize = x;
-
             for (int y = 0; y < nHeight; y++) {
                 sf::Vector2i pos(x, y);
 
@@ -601,10 +599,10 @@ void GraphState::densityThreadCaller() {
                     if (dst <= 0.25*single.NODE_SIZE*single.NODE_SIZE)
                         continue;
 
-                    weight += 1 / dst;
+                    weight += single.NODE_SIZE * single.NODE_SIZE / dst;
                 }
 
-                single.state->points[index].position = sf::Vector2f(xSize, y);
+                single.state->points[index].position = sf::Vector2f(x, y);
                 single.state->points[index].color = single.state->gradient(weight);
 
                 index += maxSegments;
