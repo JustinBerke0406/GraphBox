@@ -314,10 +314,10 @@ void GraphState::drawEdge(sf::Vector2f pos1, sf::Vector2f pos2, int n1, int n2, 
 
     sf::Vector2f perp(-cY*single.EDGE_THICKNESS/mag, cX*single.EDGE_THICKNESS/mag);
 
-    line[0].position = sf::Vector2f((cX*0.5f/mag)*n1+mpos1.x - perp.x*single.NODE_SIZE, (cY*0.5f/mag)*n1 + mpos1.y - perp.y*single.NODE_SIZE);
+    line[0].position = sf::Vector2f((cX*0.5f*single.NODE_SIZE/mag)*n1+mpos1.x - perp.x*single.NODE_SIZE, (cY*0.5f*single.NODE_SIZE/mag)*n1 + mpos1.y - perp.y*single.NODE_SIZE);
     line[0].color = sf::Color::Black;
 
-    line[1].position = sf::Vector2f(-(cX*0.5f/mag)*n2+mpos2.x - perp.x*single.NODE_SIZE, -(cY*0.5f/mag)*n2+mpos2.y - perp.y*single.NODE_SIZE);
+    line[1].position = sf::Vector2f(-(cX*0.5f*single.NODE_SIZE/mag)*n2+mpos2.x - perp.x*single.NODE_SIZE, -(cY*0.5f*single.NODE_SIZE/mag)*n2+mpos2.y - perp.y*single.NODE_SIZE);
     line[1].color = sf::Color::Black;
 
     line[2].position = sf::Vector2f(line[1].position.x+perp.x*2*single.NODE_SIZE, line[1].position.y+perp.y*2*single.NODE_SIZE);
@@ -331,9 +331,9 @@ void GraphState::drawEdge(sf::Vector2f pos1, sf::Vector2f pos2, int n1, int n2, 
 
         float sign = 2 * arrow - 3;
 
-        arr[0].position = sf::Vector2f(line[arrow-1].position.x + perp.x*(single.ARROW_THICKNESS+1)*single.NODE_SIZE, line[arrow-1].position.y + perp.y*(single.ARROW_THICKNESS+1)*single.NODE_SIZE);
-        arr[1].position = sf::Vector2f(line[arrow-1].position.x - perp.x*(single.ARROW_THICKNESS-1)*single.NODE_SIZE, line[arrow-1].position.y - perp.y*(single.ARROW_THICKNESS-1)*single.NODE_SIZE);
-        arr[2].position = sf::Vector2f(sign*(cX*0.5f/mag)*single.NODE_SIZE+line[arrow-1].position.x + perp.x, sign*(cY*0.5f/mag)*single.NODE_SIZE+line[arrow-1].position.y + perp.y);
+        arr[0].position = line[arrow-1].position + perp * (single.ARROW_THICKNESS+1) * single.NODE_SIZE;
+        arr[1].position = line[arrow-1].position - perp * (single.ARROW_THICKNESS-1) * single.NODE_SIZE;
+        arr[2].position = sf::Vector2f(sign*(cX*0.5f/mag)*single.NODE_SIZE+line[arrow-1].position.x + perp.x*single.NODE_SIZE, sign*(cY*0.5f/mag)*single.NODE_SIZE+line[arrow-1].position.y + perp.y*single.NODE_SIZE);
 
         arr[0].color = sf::Color::Black;
         arr[1].color = sf::Color::Black;
@@ -430,15 +430,16 @@ void GraphState::physicsUpdate() {
     };
 
     auto velVectorRep = [&single, this](Node* one, Node* two) {
-        auto dist = distance(one, two);
+        auto dist = distance(one, two)/single.NODE_SIZE;
         auto unitVector = sf::Vector2f(one->x - two->x, one->y - two->y) / dist;
         return unitVector*single.REP_CONST/(float)pow(fmax(dist, single.NODE_SIZE), 2);};
 
     auto velVectorSpring = [&single, this, mag](Node* one, Node* two) {
         sf::Vector2f unit(two->x - one->x, two->y - one->y);
         unit /= mag(unit);
-        sf::Vector2f spring = unit*single.SPRING_CONST*((float)pow(fmax(distance(one, two), 1)- single.SPRING_REST_LEN, 2))/(float)fmax(distance(one, two), 1);
-        float sign = ((fmax(distance(one, two), single.NODE_SIZE) > single.SPRING_REST_LEN) ? 1.0f : -1.0f);
+        auto dist = distance(one, two) / single.NODE_SIZE;
+        sf::Vector2f spring = unit*single.SPRING_CONST*((float)pow(dist - single.SPRING_REST_LEN, 2))/(float)dist;
+        float sign = ((dist > single.SPRING_REST_LEN) ? 1.0f : -1.0f);
 
         return spring*sign;
     };
@@ -499,8 +500,8 @@ void GraphState::physicsUpdate() {
     }
 
     for (Node* node : nodes) {
-        node->x += node->velocity.x * single.DELTA_TIME;
-        node->y += node->velocity.y * single.DELTA_TIME;
+        node->x += node->velocity.x * single.DELTA_TIME * single.NODE_SIZE;
+        node->y += node->velocity.y * single.DELTA_TIME * single.NODE_SIZE;
     }
 }
 
