@@ -41,6 +41,8 @@ int launch() {
         // Draw spriteHidden
         window.clear(sf::Color(255,255,255));
 
+        window.setView(single.defaultView);
+
         // Render
         render();
         single.state->initToolbox();
@@ -85,17 +87,14 @@ int launch() {
         if (startDrag) {
             if (sf::Mouse::isButtonPressed(sf::Mouse::Middle)) {
                 auto tempPos = sf::Mouse::getPosition(single.window);
-                auto pos = single.state->getPositionGrid().gl_loc(tempPos);
+                auto nPos = single.window.mapPixelToCoords(tempPos);
 
-                sf::Vector2f nPos = sf::Vector2f(pos[0], pos[1]);
+                single.defaultView.move(dragPos - nPos);
+                single.window.setView(single.defaultView);
 
-                auto delta = dragPos - nPos;
+                nPos = single.window.mapPixelToCoords(tempPos);
 
-                single.state->getPositionGrid().pan(delta.x, delta.y);
-
-                pos = single.state->getPositionGrid().gl_loc(tempPos);
-
-                dragPos = sf::Vector2f(pos[0], pos[1]);
+                dragPos = nPos;
             }
             else {
                 startDrag = false;
@@ -115,9 +114,9 @@ int launch() {
                         draggedNode = node;
 
                     if (!offsetSet) {
-                        auto loMouse = single.state->getPositionGrid().gl_loc(mousePos);
+                        auto loMouse = single.window.mapPixelToCoords(mousePos);
 
-                        offset = sf::Vector2f(loMouse[0] - draggedNode->x, loMouse[1] - draggedNode->y);
+                        offset = sf::Vector2f(loMouse.x - draggedNode->x, loMouse.y - draggedNode->y);
                     }
 
                     offsetSet = true;
@@ -208,9 +207,7 @@ int launch() {
                             if (!startDrag) {
                                 startDrag = true;
 
-                                auto pos = single.state->getPositionGrid().gl_loc(event.mouseButton);
-
-                                dragPos = sf::Vector2f(pos[0], pos[1]);
+                                dragPos = single.window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
                             }
                         }
                     }
@@ -274,14 +271,20 @@ int launch() {
                     }
                 }
             }
-            else if (event.type == sf::Event::Resized) {
-                single.state->getPositionGrid().updateResizeData(event.size);
-            }
             else if (event.type == sf::Event::MouseMoved) {
                 readyToSelect = false;
             }
             else if (event.type == sf::Event::MouseWheelScrolled) {
-                single.state->getPositionGrid().zoom(std::pow(single.ZOOM_SPEED*single.WHEEL_SENS, event.mouseWheelScroll.delta), event.mouseWheelScroll);
+                sf::Vector2i mousePos(event.mouseWheelScroll.x, event.mouseWheelScroll.y);
+                auto conv = sf::Vector2i(mousePos.x, mousePos.y);
+
+                auto prevCoord = single.window.mapPixelToCoords(conv);
+                single.defaultView.zoom(1.0f/std::pow(single.ZOOM_SPEED*single.WHEEL_SENS, event.mouseWheelScroll.delta));
+                single.window.setView(single.defaultView);
+
+                auto postCoord = single.window.mapPixelToCoords(conv);
+
+                single.defaultView.move(prevCoord - postCoord);
             }
         }
     }
@@ -293,10 +296,8 @@ void onMouseHeld(sf::Vector2f offset, Node* node) {
     Single& single = Single::instance();
 
     if (sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-        auto tempPos = sf::Mouse::getPosition(single.window);
-        auto pos = single.state->getPositionGrid().gl_loc(tempPos);
-        sf::Vector2f ms(pos[0], pos[1]);
-        single.state->changeNodePositionLocally(node, ms - offset);
+        auto pos = single.window.mapPixelToCoords(sf::Mouse::getPosition(single.window));
+        single.state->changeNodePositionLocally(node, pos - offset);
     }
 }
 
@@ -467,28 +468,28 @@ void print() {
 void registerMovement() {
     Single& single = Single::instance();
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Hyphen)) {
-        single.state->getPositionGrid().zoom(1.0f/single.ZOOM_SPEED);
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Equal)) {
+        single.defaultView.zoom(1.0f/single.ZOOM_SPEED);
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Equal)) {
-        single.state->getPositionGrid().zoom(single.ZOOM_SPEED);
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Hyphen)) {
+        single.defaultView.zoom(single.ZOOM_SPEED);
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
-        single.state->getPositionGrid().panRelative(-single.MOVE_SPEED, 0);
+        single.defaultView.move(-single.MOVE_SPEED, 0);
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
-        single.state->getPositionGrid().panRelative(single.MOVE_SPEED, 0);
+        single.defaultView.move(single.MOVE_SPEED, 0);
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
-        single.state->getPositionGrid().panRelative(0, -single.MOVE_SPEED);
+        single.defaultView.move(0, -single.MOVE_SPEED);
     }
 
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
-        single.state->getPositionGrid().panRelative(0, single.MOVE_SPEED);
+        single.defaultView.move(0, single.MOVE_SPEED);
     }
 }
 

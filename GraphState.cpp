@@ -5,131 +5,6 @@
 #include <iostream>
 #include "Single.h"
 
-void GraphState::PositionGrid::zoom(float scale, float x, float y) {
-    float scaleChange = (scale - 1)/scale;
-
-    xOrigin += scaleChange*(x-xOrigin);
-    yOrigin += scaleChange*(y-yOrigin);
-
-    zoomScale *= scale;
-}
-
-void GraphState::PositionGrid::zoom(float scale, sf::Event::MouseWheelScrollEvent buttonEvent) {
-    std::array<float, 2> newPos = gl_loc(buttonEvent.x, buttonEvent.y);
-
-    zoom(scale, newPos[0], newPos[1]);
-}
-
-void GraphState::PositionGrid::zoom(float scale) {
-    auto pos = gl_loc(xResize * (float) WIDTH/2, yResize * (float) HEIGHT/2);
-
-    zoom(scale, pos[0], pos[1]);
-}
-
-std::array<float, 2> GraphState::PositionGrid::gl_loc(int x, int y) const {
-    std::array<float, 2> pos {
-        (float) x / (zoomScale * xResize) + xOrigin,
-        (float) y / (zoomScale * yResize) + yOrigin};
-
-    return pos;
-}
-
-std::array<float, 2> GraphState::PositionGrid::gl_loc(sf::Event::MouseButtonEvent buttonEvent) const {
-    std::array<float, 2> newPos = gl_loc(buttonEvent.x, buttonEvent.y);
-
-    return newPos;
-}
-
-std::array<float, 2> GraphState::PositionGrid::gl_loc(sf::Vector2<int> &pos) const {
-    return gl_loc(pos.x, pos.y);
-}
-
-std::array<int, 2> GraphState::PositionGrid::loc_gl(float x, float y) const {
-    std::array<int, 2> pos {
-            (int) round((double) ((x - xOrigin) * zoomScale)),
-            (int) round((double) ((y - yOrigin) * zoomScale))};
-
-    return pos;
-}
-
-void GraphState::PositionGrid::transform(sf::Transformable &shape) {
-    shape.scale(zoomScale, zoomScale);
-
-    std::array<int, 2> org = loc_gl(shape.getPosition().x, shape.getPosition().y);
-
-    shape.setPosition(org[0], org[1]);
-}
-
-void GraphState::PositionGrid::transform(sf::CircleShape &shape) {
-    shape.scale(zoomScale, zoomScale);
-
-    std::array<int, 2> org = loc_gl(shape.getPosition().x, shape.getPosition().y);
-
-    shape.setPosition(org[0], org[1]);
-
-    shape.setPointCount(fmin(30 * fmax(zoomScale / 100, 2), 480));
-}
-
-void GraphState::PositionGrid::transform(sf::Text &shape) {
-    shape.scale(zoomScale / 100, zoomScale / 100);
-
-    std::array<int, 2> org = loc_gl(shape.getPosition().x, shape.getPosition().y);
-
-    shape.setPosition(org[0], org[1]);
-}
-
-void GraphState::PositionGrid::transform(sf::Vertex* ones, int count) {
-    for (int i = 0; i < count; i++) {
-        auto& one = ones[i];
-        auto glPos1 = loc_gl(one.position.x, one.position.y);
-
-        one.position = sf::Vector2f(glPos1[0], glPos1[1]);
-    }
-}
-
-GraphState::PositionGrid::PositionGrid() {
-    xOrigin = 0.0f;
-    yOrigin = 0.0f;
-
-    zoomScale = 100.0f;
-
-    xResize = 1.0f;
-    yResize = 1.0f;
-}
-
-void GraphState::PositionGrid::updateResizeData(sf::Event::SizeEvent size) {
-    xResize = (float) size.width / (float) WIDTH;
-    yResize = (float) size.height / (float) HEIGHT;
-}
-
-void GraphState::PositionGrid::pan(float x, float y) {
-    xOrigin += x;
-    yOrigin += y;
-}
-
-void GraphState::PositionGrid::panRelative(float x, float y) {
-    xOrigin += x / (zoomScale / 100);
-    yOrigin += y / (zoomScale / 100);
-}
-
-std::array<sf::Vector2f, 2> GraphState::PositionGrid::getCorners() {
-    sf::Vector2f org(xOrigin, yOrigin);
-
-    auto pos = gl_loc(WIDTH, HEIGHT);
-
-    sf::Vector2f bottom(pos[0], pos[1]);
-
-    return std::array<sf::Vector2f, 2> {org, bottom};
-}
-
-std::array<float, 2> GraphState::PositionGrid::getResize() const {
-    return std::array<float, 2> {xResize, yResize};
-}
-
-GraphState::PositionGrid &GraphState::getPositionGrid() {
-    return positionGrid;
-}
-
 std::string GraphState::createNode(std::string label, float x, float y) {
     Node* node = new Node();
     node->x = x;
@@ -142,9 +17,11 @@ std::string GraphState::createNode(std::string label, float x, float y) {
 }
 
 std::string GraphState::createNode(std::string label, sf::Event::MouseButtonEvent event) {
-    auto pos = positionGrid.gl_loc(event);
+    Single& single = Single::instance();
 
-    return createNode(std::move(label), pos[0], pos[1]);
+    auto pos = single.window.mapPixelToCoords(sf::Vector2i(event.x, event.y));
+
+    return createNode(std::move(label), pos.x, pos.y);
 }
 
 std::string GraphState::createNode(sf::Event::MouseButtonEvent event) {
@@ -188,10 +65,11 @@ void GraphState::drawNodes() {
 
     for (const Node* n : nodes) {
         sf::CircleShape circ;
-        circ.setRadius(0.5f);
+        circ.setRadius(0.5f * single.NODE_SIZE);
         circ.setOrigin(circ.getLocalBounds().width/2, circ.getLocalBounds().height/2);
-        circ.setOutlineThickness(-0.02f);
+        circ.setOutlineThickness(-0.02f * single.NODE_SIZE);
         circ.setOutlineColor(sf::Color::Black);
+        circ.setPointCount(100);
 
         sf::Color fillColor = (n == selectedNode) ? ((!errorLabel) ? single.HIGHLIGHT_COLOR : single.ERROR_COLOR) : single.NODE_COLOR;
 
@@ -203,7 +81,6 @@ void GraphState::drawNodes() {
         circ.setFillColor(fillColor);
         circ.setPosition(n->x, n->y);
 
-        single.state->getPositionGrid().transform(circ);
         circles.push_back(circ);
 
         sf::Text text;
@@ -218,7 +95,6 @@ void GraphState::drawNodes() {
             text.setString(n->label + "_");
         }
 
-        single.state->getPositionGrid().transform(text);
         texts.push_back(text);
 
         for (Node* con : n->connections)
@@ -236,9 +112,9 @@ void GraphState::drawNodes() {
 
         auto mousePos = sf::Mouse::getPosition(single.window);
 
-        auto mPos = getPositionGrid().gl_loc(mousePos);
+        auto mPos = single.window.mapPixelToCoords(sf::Vector2i(mousePos.x, mousePos.y));
 
-        drawEdge(sf::Vector2f(selectedNode->x, selectedNode->y), sf::Vector2f(mPos[0], mPos[1]), true, false, 0);
+        drawEdge(sf::Vector2f(selectedNode->x, selectedNode->y), sf::Vector2f(mPos.x, mPos.y), true, false, 0);
     }
 
     sf::Text text;
@@ -315,12 +191,14 @@ bool GraphState::cursorOverClickable() {
 }
 
 Node* GraphState::nodeAt(sf::Event::MouseButtonEvent event) {
-    auto pos = positionGrid.gl_loc(event);
+    Single& single = Single::instance();
+
+    auto pos = single.window.mapPixelToCoords(sf::Vector2i(event.x, event.y));
 
     for (int i = nodes.size() - 1; i >= 0; i--) {
         Node& n = *nodes[i];
 
-        if (sqrt(pow(pos[0] - n.x, 2)+pow(pos[1] - n.y, 2)) <= 0.5)
+        if (sqrt(pow(pos.x - n.x, 2)+pow(pos.y - n.y, 2)) <= 0.5*single.NODE_SIZE)
             return nodes[i];
     }
 
@@ -328,12 +206,14 @@ Node* GraphState::nodeAt(sf::Event::MouseButtonEvent event) {
 }
 
 Node* GraphState::nodeAt(sf::Vector2<int> pos) {
-    auto post = positionGrid.gl_loc(pos.x, pos.y);
+    Single& single = Single::instance();
+
+    auto post = single.window.mapPixelToCoords(pos);
 
     for (int i = nodes.size() - 1; i >= 0; i--) {
         Node& n = *nodes[i];
 
-        if (sqrt(pow(post[0] - n.x, 2)+pow(post[1] - n.y, 2)) <= 0.5)
+        if (sqrt(pow(post.x - n.x, 2)+pow(post.y - n.y, 2)) <= 0.5*single.NODE_SIZE)
             return nodes[i];
     }
 
@@ -434,37 +314,33 @@ void GraphState::drawEdge(sf::Vector2f pos1, sf::Vector2f pos2, int n1, int n2, 
 
     sf::Vector2f perp(-cY*single.EDGE_THICKNESS/mag, cX*single.EDGE_THICKNESS/mag);
 
-    line[0].position = sf::Vector2f((cX*0.5f/mag)*n1+mpos1.x - perp.x, (cY*0.5f/mag)*n1 + mpos1.y - perp.y);
+    line[0].position = sf::Vector2f((cX*0.5f/mag)*n1+mpos1.x - perp.x*single.NODE_SIZE, (cY*0.5f/mag)*n1 + mpos1.y - perp.y*single.NODE_SIZE);
     line[0].color = sf::Color::Black;
 
-    line[1].position = sf::Vector2f(-(cX*0.5f/mag)*n2+mpos2.x - perp.x, -(cY*0.5f/mag)*n2+mpos2.y - perp.y);
+    line[1].position = sf::Vector2f(-(cX*0.5f/mag)*n2+mpos2.x - perp.x*single.NODE_SIZE, -(cY*0.5f/mag)*n2+mpos2.y - perp.y*single.NODE_SIZE);
     line[1].color = sf::Color::Black;
 
-    line[2].position = sf::Vector2f(line[1].position.x+perp.x*2, line[1].position.y+perp.y*2);
+    line[2].position = sf::Vector2f(line[1].position.x+perp.x*2*single.NODE_SIZE, line[1].position.y+perp.y*2*single.NODE_SIZE);
     line[2].color = sf::Color::Black;
 
-    line[3].position = sf::Vector2f(line[0].position.x+perp.x*2, line[0].position.y+perp.y*2);
+    line[3].position = sf::Vector2f(line[0].position.x+perp.x*2*single.NODE_SIZE, line[0].position.y+perp.y*2*single.NODE_SIZE);
     line[3].color = sf::Color::Black;
 
     if (arrow != 0) {
         sf::Vertex arr[3];
 
-        int sign = -(3 - 2 * arrow);
+        float sign = 2 * arrow - 3;
 
-        arr[0].position = sf::Vector2f(line[arrow-1].position.x + perp.x*(single.ARROW_THICKNESS+1), line[arrow-1].position.y + perp.y*(single.ARROW_THICKNESS+1));
-        arr[1].position = sf::Vector2f(line[arrow-1].position.x - perp.x*(single.ARROW_THICKNESS-1), line[arrow-1].position.y - perp.y*(single.ARROW_THICKNESS-1));
-        arr[2].position = sf::Vector2f(sign*(cX*0.5f/mag)+line[arrow-1].position.x + perp.x, sign*(cY*0.5f/mag)+line[arrow-1].position.y + perp.y);
+        arr[0].position = sf::Vector2f(line[arrow-1].position.x + perp.x*(single.ARROW_THICKNESS+1)*single.NODE_SIZE, line[arrow-1].position.y + perp.y*(single.ARROW_THICKNESS+1)*single.NODE_SIZE);
+        arr[1].position = sf::Vector2f(line[arrow-1].position.x - perp.x*(single.ARROW_THICKNESS-1)*single.NODE_SIZE, line[arrow-1].position.y - perp.y*(single.ARROW_THICKNESS-1)*single.NODE_SIZE);
+        arr[2].position = sf::Vector2f(sign*(cX*0.5f/mag)*single.NODE_SIZE+line[arrow-1].position.x + perp.x, sign*(cY*0.5f/mag)*single.NODE_SIZE+line[arrow-1].position.y + perp.y);
 
         arr[0].color = sf::Color::Black;
         arr[1].color = sf::Color::Black;
         arr[2].color = sf::Color::Black;
 
-        getPositionGrid().transform(arr, 3);
-
         single.window.draw(arr, 3, sf::Triangles);
     }
-
-    getPositionGrid().transform(line, 4);
 
     single.window.draw(line, 4, sf::Quads);
 }
@@ -482,10 +358,12 @@ Node *GraphState::getSelectedNode() {
 }
 
 void GraphState::changeNodePosition(Node* node, sf::Event::MouseButtonEvent event) {
-    auto pos = getPositionGrid().gl_loc(event);
+    Single& single = Single::instance();
 
-    node->x = pos[0];
-    node->y = pos[1];
+    auto pos = single.window.mapPixelToCoords(sf::Vector2i(event.x, event.y));
+
+    node->x = pos.x;
+    node->y = pos.y;
 }
 
 void GraphState::changeNodePositionLocally(Node *node, sf::Vector2f pos) {
@@ -494,10 +372,12 @@ void GraphState::changeNodePositionLocally(Node *node, sf::Vector2f pos) {
 }
 
 void GraphState::changeNodePosition(Node *node, sf::Vector2i mousePos) {
-    auto pos = getPositionGrid().gl_loc(mousePos);
+    Single& single = Single::instance();
 
-    node->x = pos[0];
-    node->y = pos[1];
+    auto pos = single.window.mapPixelToCoords(mousePos);
+
+    node->x = pos.x;
+    node->y = pos.y;
 }
 
 void GraphState::toggleConnectMode() {
@@ -552,13 +432,13 @@ void GraphState::physicsUpdate() {
     auto velVectorRep = [&single, this](Node* one, Node* two) {
         auto dist = distance(one, two);
         auto unitVector = sf::Vector2f(one->x - two->x, one->y - two->y) / dist;
-        return unitVector*single.REP_CONST/(float)pow(fmax(dist, 1), 2);};
+        return unitVector*single.REP_CONST/(float)pow(fmax(dist, single.NODE_SIZE), 2);};
 
     auto velVectorSpring = [&single, this, mag](Node* one, Node* two) {
         sf::Vector2f unit(two->x - one->x, two->y - one->y);
         unit /= mag(unit);
         sf::Vector2f spring = unit*single.SPRING_CONST*((float)pow(fmax(distance(one, two), 1)- single.SPRING_REST_LEN, 2))/(float)fmax(distance(one, two), 1);
-        float sign = ((fmax(distance(one, two), 1) > single.SPRING_REST_LEN) ? 1.0f : -1.0f);
+        float sign = ((fmax(distance(one, two), single.NODE_SIZE) > single.SPRING_REST_LEN) ? 1.0f : -1.0f);
 
         return spring*sign;
     };
@@ -589,7 +469,7 @@ void GraphState::physicsUpdate() {
             if (node1 != node2) {
                 auto dist = distance(node1, node2);
 
-                if (dist <= 1) {
+                if (dist <= single.NODE_SIZE) {
                     auto vel = node1->velocity;
                     sf::Vector2f distVec(node2->x - node1->x, node2->y - node1->y);
                     auto unit = distVec/dist;
@@ -658,12 +538,14 @@ void GraphState::drawDensityMap() {
     int index = 0;
     float weight, dst;
 
-    auto resize = positionGrid.getResize();
+    Single& single = Single::instance();
 
-    points.resize(positionGrid.WIDTH * positionGrid.HEIGHT * resize[0] * resize[1]);
+    auto viewSize = single.defaultView.getSize();
 
-    int nWidth = positionGrid.WIDTH * resize[0];
-    int nHeight = positionGrid.HEIGHT * resize[1];
+    points.resize(viewSize.x * viewSize.y);
+
+    int nWidth = viewSize.x;
+    int nHeight = viewSize.y;
 
     for (int x = 0; x < nWidth; x++) {
         for (int y = 0; y < nHeight; y++) {
@@ -680,7 +562,7 @@ void GraphState::drawDensityMap() {
                 weight += 1 / dst;
             }
 
-            points[index].position = sf::Vector2f(x / resize[0], y / resize[1]);
+            points[index].position = sf::Vector2f(x, y);
             points[index++].color = gradient(weight);
         }
     }
@@ -691,23 +573,21 @@ void GraphState::drawDensityMap() {
 void GraphState::densityThreadCaller() {
     Single &single = Single::instance();
 
-    auto resize = single.state->getPositionGrid().getResize();
+    auto viewSize = single.defaultView.getSize();
 
-    float invResizeX = 1 / resize[0], invResizeY = 1 / resize[1];
-
-    single.state->points.resize(single.state->getPositionGrid().WIDTH * single.state->getPositionGrid().HEIGHT * resize[0] * resize[1]);
+    single.state->points.resize(viewSize.x * viewSize.y);
 
     int segments = Single::instance().THREADS;
 
-    int totalWidth = single.state->getPositionGrid().WIDTH * resize[0];
-    int nHeight = single.state->getPositionGrid().HEIGHT * resize[1];
+    int totalWidth = viewSize.x;
+    int nHeight = viewSize.y;
 
-    auto drawDensity = [&single, &nHeight, &invResizeX, &invResizeY, &totalWidth](int segment, int maxSegments) {
+    auto drawDensity = [&single, &nHeight, &totalWidth](int segment, int maxSegments) {
         float weight, dst;
         int index = segment;
 
         for (int x = segment; x < totalWidth; x += maxSegments) {
-            float xSize = x * invResizeX;
+            float xSize = x;
 
             for (int y = 0; y < nHeight; y++) {
                 sf::Vector2i pos(x, y);
@@ -717,13 +597,13 @@ void GraphState::densityThreadCaller() {
                 for (Node* n : single.state->getNodes()) {
                     dst = single.state->distanceSq(n, pos);
 
-                    if (dst <= 0.25)
+                    if (dst <= 0.25*single.NODE_SIZE*single.NODE_SIZE)
                         continue;
 
                     weight += 1 / dst;
                 }
 
-                single.state->points[index].position = sf::Vector2f(xSize, y * invResizeY);
+                single.state->points[index].position = sf::Vector2f(xSize, y);
                 single.state->points[index].color = single.state->gradient(weight);
 
                 index += maxSegments;
@@ -743,10 +623,12 @@ void GraphState::densityThreadCaller() {
 }
 
 float GraphState::distanceSq(Node* &one, sf::Vector2i& two) {
-    auto pos = getPositionGrid().gl_loc(two);
+    Single& single = Single::instance();
 
-    float dif1 = one->x-pos[0];
-    float dif2 = one->y-pos[1];
+    auto pos = single.window.mapPixelToCoords(two);
+
+    float dif1 = one->x-pos.x;
+    float dif2 = one->y-pos.y;
 
     return (dif1*dif1)+(dif2*dif2);
 }

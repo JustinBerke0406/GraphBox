@@ -11,41 +11,6 @@
 
 class GraphState {
 private:
-    class PositionGrid {
-    private:
-        float xOrigin, yOrigin, zoomScale, xResize, yResize;
-    public:
-        PositionGrid();
-
-        const int WIDTH = 1920, HEIGHT = 1080;
-
-        void zoom(float scale);
-        void zoom(float scale, float x, float y);
-        void zoom(float scale, sf::Event::MouseWheelScrollEvent buttonEvent);
-
-        void pan(float x, float y);
-        void panRelative(float x, float y);
-
-        [[nodiscard]] std::array<float, 2> gl_loc(int x, int y) const;
-        [[nodiscard]] std::array<float, 2> gl_loc(sf::Vector2<int> &pos) const;
-        [[nodiscard]] std::array<float, 2> gl_loc(sf::Event::MouseButtonEvent buttonEvent) const;
-
-        [[nodiscard]] std::array<int, 2> loc_gl(float x, float y) const;
-
-        [[nodiscard]] std::array<float, 2> getResize() const;
-
-        void transform(sf::Transformable& shape);
-        void transform(sf::CircleShape& shape);
-        void transform(sf::Text &shape);
-        void transform(sf::Vertex* ones, int count);
-
-        void updateResizeData(sf::Event::SizeEvent size);
-
-        std::array<sf::Vector2f, 2> getCorners();
-    };
-
-    PositionGrid positionGrid;
-
     std::vector<Node*> nodes;
 
     Node* selectedNode = nullptr;
@@ -53,8 +18,6 @@ private:
     int textBlinker = 0;
 public:
     GraphState() = default;
-
-    PositionGrid& getPositionGrid();
 
     std::string createNode(std::string label, float x, float y);
     std::string createNode(std::string label, sf::Event::MouseButtonEvent event);

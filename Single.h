@@ -12,6 +12,8 @@ public:
         return inst;
     }
 
+    const int WIDTH = 1920, HEIGHT = 1080;
+
     const float ZOOM_SPEED = 1.05f, MOVE_SPEED = 0.35f, WHEEL_SENS = 1.3f;
 
     const sf::Color NODE_COLOR = sf::Color(240, 240, 240),
@@ -20,6 +22,7 @@ public:
                     ADJ_COLOR = sf::Color(44, 230, 2);
 
     const float EDGE_THICKNESS = 0.02f, ARROW_THICKNESS = 10.0f;
+    const float NODE_SIZE = 90.0f;
 
     const int MOUSE_HOLD_TIME = 3, DOUBLE_CLICK_TIME = 7;
 
