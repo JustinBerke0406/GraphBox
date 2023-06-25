@@ -43,7 +43,7 @@ public:
 
     const GraphState::Mode DEFAULT_MODE = GraphState::Mode::Edit;
 
-    const std::string OUTPUT_FILE = "GraphBox_Save_";
+    const std::string OUTPUT_FILE = "prints/GraphBox_Print_";
 
     int files = 0;
 
@@ -57,10 +57,12 @@ public:
     sf::Vector3i gradTwo = {240, 240, 0};
     sf::Vector3i gradThree = {255, 0, 0};
 
-    const int toolViewHeight = 40;
+    const int TOOL_HEIGHT = 40;
 
     sf::View defaultView;
     sf::View toolView;
+
+    std::vector<std::string> TOOL_BUTTONS = {"Save", "Print", "Connect", "Directed", "Force", "Adjacency", "Reset"};
 
     ~Single();
 };

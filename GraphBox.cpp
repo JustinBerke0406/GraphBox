@@ -155,62 +155,79 @@ int launch() {
                 window.close();
                 // Mouse clicked event
             else if (event.type == sf::Event::MouseButtonPressed) {
-                if (single.state->mode != GraphState::Mode::View) {
-                    if (single.state->mode != GraphState::Mode::Typing) {
-                        if (event.mouseButton.button == sf::Mouse::Left) {
-                            mouseHeld = false;
-
-                            if (single.state->mode == GraphState::Mode::Edit &&
-                                !single.state->cursorOverClickable())
-                                single.state->createNode(event.mouseButton);
-                            else if (single.state->mode == GraphState::Mode::Connect) {
-                                if (single.state->wouldSelect(event.mouseButton)) {
-                                    if (!single.state->isNodeSelected()) {
-                                        Node* node = single.state->nodeAt(event.mouseButton);
-                                        single.state->toggleNode(node);
-                                    }
-                                    else {
-                                        bool passed = single.state->addConnection(single.state->nodeAt(event.mouseButton));
-
-                                        if (!passed) {
-                                            single.state->removeConnection(single.state->nodeAt(event.mouseButton));
-
-                                            if (!single.state->directed)
-                                                single.state->removeConnection(single.state->getSelectedNode(), single.state->nodeAt(event.mouseButton));
-                                        }
-
-                                        single.state->deselectNode();
-                                    }
-                                }
-                            }
-                            else if (single.state->mode == GraphState::Mode::Edit) {
-                                mouseHeld = true;
-                                readyToSelect = true;
-
-                                if (readyDouble)
-                                    activateDouble = true;
-
-                                readyDouble = true;
-                            }
-                        }
-                        else if (event.mouseButton.button == sf::Mouse::Right) {
-                            if (single.state->mode == GraphState::Mode::Edit) {
-                                single.state->deleteNode(single.state->nodeAt(event.mouseButton));
+                if (single.window.getViewport(single.defaultView).contains(sf::Vector2<int>(event.mouseButton.x, event.mouseButton.y))) {
+                    if (single.state->mode != GraphState::Mode::View) {
+                        if (single.state->mode != GraphState::Mode::Typing) {
+                            if (event.mouseButton.button == sf::Mouse::Left) {
                                 mouseHeld = false;
-                            }
-                            else if (single.state->mode == GraphState::Mode::Connect) {
-                                if (single.state->isNodeSelected())
-                                    single.state->deselectNode();
-                            }
-                        }
-                        else if (event.mouseButton.button == sf::Mouse::Middle) {
-                            if (!startDrag) {
-                                startDrag = true;
 
-                                dragPos = single.window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
+                                if (single.state->mode == GraphState::Mode::Edit &&
+                                    !single.state->cursorOverClickable())
+                                    single.state->createNode(event.mouseButton);
+                                else if (single.state->mode == GraphState::Mode::Connect) {
+                                    if (single.state->wouldSelect(event.mouseButton)) {
+                                        if (!single.state->isNodeSelected()) {
+                                            Node *node = single.state->nodeAt(event.mouseButton);
+                                            single.state->toggleNode(node);
+                                        } else {
+                                            bool passed = single.state->addConnection(
+                                                    single.state->nodeAt(event.mouseButton));
+
+                                            if (!passed) {
+                                                single.state->removeConnection(single.state->nodeAt(event.mouseButton));
+
+                                                if (!single.state->directed)
+                                                    single.state->removeConnection(single.state->getSelectedNode(),
+                                                                                   single.state->nodeAt(
+                                                                                           event.mouseButton));
+                                            }
+
+                                            single.state->deselectNode();
+                                        }
+                                    }
+                                } else if (single.state->mode == GraphState::Mode::Edit) {
+                                    mouseHeld = true;
+                                    readyToSelect = true;
+
+                                    if (readyDouble)
+                                        activateDouble = true;
+
+                                    readyDouble = true;
+                                }
+                            } else if (event.mouseButton.button == sf::Mouse::Right) {
+                                if (single.state->mode == GraphState::Mode::Edit) {
+                                    single.state->deleteNode(single.state->nodeAt(event.mouseButton));
+                                    mouseHeld = false;
+                                } else if (single.state->mode == GraphState::Mode::Connect) {
+                                    if (single.state->isNodeSelected())
+                                        single.state->deselectNode();
+                                }
+                            } else if (event.mouseButton.button == sf::Mouse::Middle) {
+                                if (!startDrag) {
+                                    startDrag = true;
+
+                                    dragPos = single.window.mapPixelToCoords(
+                                            sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
+                                }
                             }
                         }
                     }
+                }
+                else if (single.window.getViewport(single.toolView).contains(sf::Vector2<int>(event.mouseButton.x, event.mouseButton.y))) {
+                    std::string button = single.state->getButtonAtPoint(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
+
+                    if (button == "Connect")
+                        single.state->toggleConnectMode();
+                    else if (button == "Directed")
+                        single.state->toggleDirectedMode();
+                    else if (button == "Force")
+                        single.state->toggleForce();
+                    else if (button == "Adjacency")
+                        single.state->toggleAdjMode();
+                    else if (button == "Print")
+                        print();
+                    else if (button == "Reset")
+                        single.state->reset();
                 }
             }
             else if (event.type == sf::Event::KeyPressed) {

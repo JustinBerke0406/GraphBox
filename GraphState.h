@@ -101,4 +101,8 @@ public:
     bool adjacentTo(const Node *pNode, const Node *mainNode);
 
     void initToolbox();
+
+    std::string getButtonAtPoint(sf::Vector2i vector2);
+
+    void reset();
 };

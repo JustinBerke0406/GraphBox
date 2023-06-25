@@ -181,15 +181,28 @@ GraphState::~GraphState() {
         delete n;
 
     nodes.clear();
+
+    selectedNode = nullptr;
 }
 
 bool GraphState::cursorOverClickable() {
-    Node* node = nodeAt(sf::Mouse::getPosition(Single::instance().window));
+    Single& single = Single::instance();
 
-    if (node == nullptr)
-        return false;
+    auto mousePos = sf::Mouse::getPosition(single.window);
 
-    return true;
+    if (single.window.getViewport(single.defaultView).contains(mousePos)) {
+        Node *node = nodeAt(mousePos);
+
+        if (node == nullptr)
+            return false;
+
+        return true;
+    }
+    else if (single.window.getViewport(single.toolView).contains(mousePos)) {
+        return true;
+    }
+
+    return false;
 }
 
 Node* GraphState::nodeAt(sf::Event::MouseButtonEvent event) {
@@ -698,13 +711,78 @@ void GraphState::initToolbox() {
 
     single.window.setView(single.toolView);
 
-    sf::RectangleShape box(single.toolView.getSize());
-    box.setPosition(0, 0);
-    box.setFillColor(sf::Color(220, 220, 220));
-    box.setOutlineThickness(-2);
-    box.setOutlineColor(sf::Color::Black);
+    auto toolViewSize = single.toolView.getSize();
 
-    single.window.draw(box);
+    int toolButtons = single.TOOL_BUTTONS.size();
+
+    float width = toolViewSize.x / toolButtons;
+
+    for (int i = 0; i < toolButtons; i++) {
+        sf::RectangleShape button(sf::Vector2f(width, toolViewSize.y));
+        button.setPosition(width * i, 0);
+        button.setFillColor(sf::Color(220, 220, 220));
+        button.setOutlineThickness(-2);
+        button.setOutlineColor(sf::Color::Black);
+
+        auto mousePos = single.window.mapPixelToCoords(sf::Mouse::getPosition(single.window));
+
+        std::string name = single.TOOL_BUTTONS[i];
+
+        if ((forceMode && name == "Force") || (adjMode && name == "Adjacency") ||
+        (directed && name == "Directed") || (mode == Mode::Connect && name == "Connect"))
+            button.setFillColor(single.HIGHLIGHT_COLOR);
+
+        if (mousePos.y <= toolViewSize.y && mousePos.y >= 0 && mousePos.x > width*i && mousePos.x <= width*(i+1)) {
+            auto curColor = button.getFillColor();
+
+            button.setFillColor(sf::Color(curColor.r - 30, curColor.g - 30, curColor.b - 30));
+        }
+
+        sf::Text text;
+        text.setFont(single.font);
+        text.setCharacterSize(24);
+        text.setFillColor(sf::Color::Black);
+        text.setString(name);
+        text.setOrigin(text.getLocalBounds().width/2, text.getLocalBounds().height/2);
+        text.setPosition(width * (i+0.5), toolViewSize.y/2-5);
+
+        single.window.draw(button);
+        single.window.draw(text);
+    }
 
     single.window.setView(single.defaultView);
+}
+
+std::string GraphState::getButtonAtPoint(sf::Vector2i pos) {
+    Single& single = Single::instance();
+
+    auto rect = single.window.getViewport(single.toolView);
+
+    if (!rect.contains(pos))
+        return "E~ButtonNotFound";
+
+    int width = rect.width / single.TOOL_BUTTONS.size();
+
+    return single.TOOL_BUTTONS[((int) (pos.x - ((int) pos.x % width) + 0.1f))/width];
+}
+
+void GraphState::reset() {
+    Single& single = Single::instance();
+
+    for (Node* n : nodes)
+        delete n;
+
+    selectedNode = nullptr;
+
+    nodes.clear();
+
+    single.defaultView.reset(sf::FloatRect(0, 0, single.WIDTH, single.HEIGHT));
+    single.defaultView.setViewport(sf::FloatRect(0.0f, (float)single.TOOL_HEIGHT / single.HEIGHT, 1.0f, 1.0f));
+
+    mode = Mode::Edit;
+
+    adjMode = false;
+    directed = false;
+    forceMode = false;
+    inverseForce = false;
 }
