@@ -5,7 +5,7 @@ Single::Single() {
     state = new GraphState();
 
     window.create(sf::VideoMode(WIDTH, HEIGHT),
-                  "GraphBox - v1.0");
+                  "Untitled - GraphBox");
 
     window.setFramerateLimit(60);
 
@@ -21,6 +21,22 @@ Single::Single() {
 
     defaultView.setViewport(sf::FloatRect(0.0f, toolHeightPerc, 1.0f, 1.0f));
     toolView.setViewport(sf::FloatRect(0.0f, 0.0f, 1.0f, toolHeightPerc));
+
+    HWND hwnd;              // owner window
+
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.lpstrFile[0] = '\0';
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "Graph Files (*.graph)\0*.graph\0";
+    ofn.lpstrDefExt = "graph";
+    ofn.nFilterIndex = 1;
+    ofn.lpstrFileTitle = nullptr;
+    ofn.nMaxFileTitle = 0;
+    ofn.lpstrInitialDir = LPCSTR(R"(.\saves)");
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 }
 
 Single::~Single() {

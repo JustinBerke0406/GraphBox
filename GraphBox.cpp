@@ -3,6 +3,8 @@
 #include <fstream>
 #include <unordered_set>
 #include <thread>
+#include <tchar.h>
+#include <filesystem>
 #include "GraphBox.h"
 #include "Single.h"
 
@@ -226,8 +228,18 @@ int launch() {
                         single.state->toggleAdjMode();
                     else if (button == "Print")
                         print();
-                    else if (button == "Reset")
+                    else if (button == "New")
                         single.state->reset();
+                    else if (button == "Save As")
+                        saveFile();
+                    else if (button == "Load")
+                        loadFile();
+                    else if (button == "Save") {
+                        if (single.fileName.empty())
+                            saveFile();
+                        else
+                            single.state->saveFile(single.fileName);
+                    }
                 }
             }
             else if (event.type == sf::Event::KeyPressed) {
@@ -329,8 +341,6 @@ void render() {
 
 void print() {
     Single& single = Single::instance();
-
-    single.files++;
 
     std::string list;
 
@@ -475,7 +485,12 @@ void print() {
         }
     }
 
-    auto out = std::ofstream(single.OUTPUT_FILE + std::to_string(single.files) + ((single.state->directed) ? "_Directed" : "") + ".txt");
+    auto fileNames = single.OUTPUT_FILE + fileName(single.fileName) + ((single.state->directed) ? "_Directed" : "") + ".txt";
+    std::ofstream out(fileNames);
+
+    if (!out.is_open())
+        std::cout << "Unable to create print file";
+
     out << list;
     out.close();
 }
@@ -506,6 +521,71 @@ void registerMovement() {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
         single.defaultView.move(0, single.MOVE_SPEED);
     }
+}
+
+void loadFile() {
+    Single& single = Single::instance();
+
+    HANDLE hf;              // file handle
+
+    auto& ofn = single.ofn;
+    ofn.lpstrFile[0] = '\0';
+
+    if (GetOpenFileName(&ofn) == TRUE) {
+        hf = CreateFile(ofn.lpstrFile,
+                        GENERIC_READ,
+                        0,
+                        (LPSECURITY_ATTRIBUTES) NULL,
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        (HANDLE) NULL);
+
+        CloseHandle(hf);
+
+        single.state->loadFile(single.szFile);
+
+        single.window.setTitle(fileName(single.szFile) + " - GraphBox");
+
+        single.fileName = single.szFile;
+
+        std::filesystem::current_path("../");
+    }
+}
+
+void saveFile() {
+    Single& single = Single::instance();
+
+    HANDLE hf;              // file handle
+
+    auto& ofn = single.ofn;
+
+    ofn.lpstrFile = single.szFile;
+
+    if (GetSaveFileName(&ofn) == TRUE) {
+        hf = CreateFile(ofn.lpstrFile,
+                        GENERIC_READ,
+                        0,
+                        (LPSECURITY_ATTRIBUTES) NULL,
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        (HANDLE) NULL);
+
+        CloseHandle(hf);
+
+        single.state->saveFile(single.szFile);
+
+        single.window.setTitle(fileName(single.szFile) + " - GraphBox");
+
+        single.fileName = single.szFile;
+
+        std::filesystem::current_path("../");
+    }
+}
+
+std::string fileName(std::string path) {
+    std::string wExt = path.substr(path.find_last_of('\\')+1);
+
+    return wExt.substr(0, wExt.size()-6);
 }
 
 int main() {

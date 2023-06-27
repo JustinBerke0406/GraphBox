@@ -105,4 +105,8 @@ public:
     std::string getButtonAtPoint(sf::Vector2i vector2);
 
     void reset();
+
+    void saveFile(std::string filename);
+
+    void loadFile(std::string filename);
 };

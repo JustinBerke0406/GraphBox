@@ -3,6 +3,7 @@
 #include <cmath>
 #include <utility>
 #include <iostream>
+#include <fstream>
 #include "Single.h"
 
 std::string GraphState::createNode(std::string label, float x, float y) {
@@ -122,7 +123,7 @@ void GraphState::drawNodes() {
     text.setCharacterSize(single.WINDOW_TEXT_SIZE);
     text.setFillColor(sf::Color::Black);
     text.setPosition(sf::Vector2f(single.WINDOW_TEXT_X_OFF, single.WINDOW_TEXT_Y_OFF));
-    text.setString("Mode: " + getMode());
+    //text.setString("Mode: " + getMode());
 
     single.window.setView(single.window.getDefaultView());
     single.window.draw(text);
@@ -785,4 +786,94 @@ void GraphState::reset() {
     directed = false;
     forceMode = false;
     inverseForce = false;
+
+    single.window.setTitle("Untitled - GraphBox");
+    single.fileName = "";
+}
+
+void GraphState::saveFile(std::string filename) {
+    Single& single = Single::instance();
+
+    std::ofstream file(filename);
+
+    int nodeNum = nodeCount();
+
+    file << nodeNum << "|";
+
+    auto nodeIndex = [this, nodeNum](Node* node) {
+        for (int i = 0; i < nodeNum; i++) {
+            if (node == nodes[i])
+                return i;
+        }
+
+        return -1;
+    };
+
+    for (int i = 0; i < nodeNum; i++) {
+        auto node = nodes[i];
+        int connections = node->connections.size();
+
+        file << node->label << "|";
+        file << node->x << "|" << node->y << "|";
+        file << connections << "|";
+
+        for (int j = 0; j < connections; j++)
+            file << nodeIndex(node->connections[j]) << "|";
+    }
+
+    if (directed)
+        file << "1|";
+    else
+        file << "0|";
+
+    file.close();
+}
+
+void GraphState::loadFile(std::string filename) {
+    Single& single = Single::instance();
+
+    std::ifstream file(filename);
+    std::string data;
+
+    std::getline(file, data);
+
+    reset();
+
+    auto pullData = [&data]() {
+        int prevDem = data.find('|');
+        std::string token = data.substr(0, prevDem);
+
+        if (prevDem != data.size() - 1)
+            data = data.substr(prevDem+1);
+
+        return token;
+    };
+
+    int nodeCount = std::stoi(pullData());
+
+    for (int i = 0; i < nodeCount; i++) {
+        nodes.push_back(new Node());
+    }
+
+    for (int i = 0; i < nodeCount; i++) {
+        Node* node = nodes[i];
+
+        std::string label = pullData();
+
+        float x = std::stof(pullData());
+        float y = std::stof(pullData());
+
+        int connections = std::stoi(pullData());
+
+        node->label = label;
+        node->x = x;
+        node->y = y;
+
+        for (int k = 0; k < connections; k++)
+            node->connections.push_back(nodes[std::stoi(pullData())]);
+    }
+
+    directed = pullData() == "1";
+
+    file.close();
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <windows.h>
 #include "GraphState.h"
 
 class Single {
@@ -43,7 +44,7 @@ public:
 
     const GraphState::Mode DEFAULT_MODE = GraphState::Mode::Edit;
 
-    const std::string OUTPUT_FILE = "prints/GraphBox_Print_";
+    const std::string OUTPUT_FILE = ".\\prints\\";
 
     int files = 0;
 
@@ -62,7 +63,12 @@ public:
     sf::View defaultView;
     sf::View toolView;
 
-    std::vector<std::string> TOOL_BUTTONS = {"Save", "Print", "Connect", "Directed", "Force", "Adjacency", "Reset"};
+    std::vector<std::string> TOOL_BUTTONS = {"Save As", "Save", "Load", "Print", "Connect", "Directed", "Force", "Adjacency", "New"};
+
+    OPENFILENAME ofn = {0};
+    char szFile[260];
+
+    std::string fileName;
 
     ~Single();
 };
