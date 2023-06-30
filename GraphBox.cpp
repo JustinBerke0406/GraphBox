@@ -226,8 +226,13 @@ int launch() {
                         single.state->toggleForce();
                     else if (button == "Adjacency")
                         single.state->toggleAdjMode();
-                    else if (button == "Print")
-                        print();
+                    else if (button == "Print") {
+                        if (single.fileName.empty())
+                            saveFile();
+
+                        if (!single.fileName.empty())
+                            print();
+                    }
                     else if (button == "New")
                         single.state->reset();
                     else if (button == "Save As")

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.23)
 project(GraphBox)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "-static-libstdc++")
 
 set(SFML_STATIC_LIBRARIES TRUE)
 set(SFML_DIR "C:/Libraries/SFML-2.5.1/lib/cmake/SFML")
