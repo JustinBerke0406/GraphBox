@@ -20,22 +20,21 @@ int launch() {
 
     sf::Cursor cursor;
 
-    bool defaultCursor = true;
-    bool mouseHeld = false;
-    bool offsetSet = false;
-    bool readyToSelect = false;
-    bool readyDouble = false;
-    bool activateDouble = false;
-    bool startDrag = false;
+    InputHelper& inputs = single.inputHelper;
 
-    int timeMouseHeld = 0;
-    int doubleClickTimer = 0;
+    bool defaultCursor = true;
+    bool offsetSet = false;
+    bool startDrag = false;
 
     std::string prevLabel;
 
     sf::Vector2f offset;
     sf::Vector2f dragPos;
+
     Node* draggedNode = nullptr;
+    Node* lastClicked = nullptr;
+
+    int timesNodeClicked = 0;
 
     // For loop to keep window open
     while (window.isOpen())
@@ -45,6 +44,8 @@ int launch() {
 
         window.setView(single.defaultView);
 
+        inputs.registerEvents();
+
         // Render
         render();
         single.state->initToolbox();
@@ -52,42 +53,22 @@ int launch() {
         if (single.state->forceMode)
             single.state->physicsUpdate();
 
-        if (!sf::Mouse::isButtonPressed(sf::Mouse::Left)) {
-            timeMouseHeld = 0;
-            offsetSet = false;
-            draggedNode = nullptr;
+        if (inputs.didMultiPress(sf::Mouse::Left) && timesNodeClicked >= 2) {
+            Node* node = single.state->nodeAt(sf::Mouse::getPosition(single.window));
 
-            if (readyDouble) {
-                doubleClickTimer++;
+            if (node != nullptr && node == lastClicked) {
+                single.state->selectNode(node);
+                single.state->mode = GraphState::Mode::Typing;
 
-                if (activateDouble) {
-                    if (doubleClickTimer < single.DOUBLE_CLICK_TIME) {
-                        Node* node = single.state->nodeAt(sf::Mouse::getPosition(single.window));
+                prevLabel = node->label;
 
-                        single.state->selectNode(node);
-                        single.state->mode = GraphState::Mode::Typing;
-
-                        prevLabel = node->label;
-
-                        readyToSelect = false;
-                    }
-
-                    readyDouble = false;
-                    activateDouble = false;
-                    doubleClickTimer = 0;
-                }
-            }
-
-            if (readyToSelect) {
-                single.state->toggleNode(single.state->nodeAt(sf::Mouse::getPosition(single.window)));
-                readyToSelect = false;
-
-                readyDouble = true;
+                offsetSet = false;
             }
         }
 
+        // Screen dragging
         if (startDrag) {
-            if (sf::Mouse::isButtonPressed(sf::Mouse::Middle)) {
+            if (inputs.isPressed(sf::Mouse::Middle) || inputs.isPressed(sf::Mouse::Left)) {
                 auto tempPos = sf::Mouse::getPosition(single.window);
                 auto nPos = single.window.mapPixelToCoords(tempPos);
 
@@ -103,31 +84,24 @@ int launch() {
             }
         }
 
-        if (mouseHeld) {
-            timeMouseHeld++;
+        if (inputs.isPressed(sf::Mouse::Left) && draggedNode != nullptr) {
+            auto mousePos = sf::Mouse::getPosition(single.window);
 
-            if (timeMouseHeld >= single.MOUSE_HOLD_TIME) {
-                auto mousePos = sf::Mouse::getPosition(single.window);
+            if (!offsetSet) {
+                auto loMouse = single.window.mapPixelToCoords(mousePos);
 
-                Node* node = single.state->nodeAt(mousePos);
+                offset = sf::Vector2f(loMouse.x - draggedNode->x, loMouse.y - draggedNode->y);
 
-                if (node != nullptr || draggedNode != nullptr) {
-                    if (draggedNode == nullptr)
-                        draggedNode = node;
-
-                    if (!offsetSet) {
-                        auto loMouse = single.window.mapPixelToCoords(mousePos);
-
-                        offset = sf::Vector2f(loMouse.x - draggedNode->x, loMouse.y - draggedNode->y);
-                    }
-
-                    offsetSet = true;
-
-                    onMouseHeld(offset, draggedNode);
-
-                    draggedNode->velocity = sf::Vector2f(0, 0);
-                }
+                offsetSet = true;
             }
+
+            onMouseHeld(offset, draggedNode);
+
+            draggedNode->velocity = sf::Vector2f(0, 0);
+        }
+        else {
+            offsetSet = false;
+            draggedNode = nullptr;
         }
 
         // draw method
@@ -161,11 +135,52 @@ int launch() {
                     if (single.state->mode != GraphState::Mode::View) {
                         if (single.state->mode != GraphState::Mode::Typing) {
                             if (event.mouseButton.button == sf::Mouse::Left) {
-                                mouseHeld = false;
+                                if (single.state->mode == GraphState::Mode::Edit) {
+                                    if (single.state->cursorOverClickable()) {
+                                        auto button = event.mouseButton;
 
-                                if (single.state->mode == GraphState::Mode::Edit &&
-                                    !single.state->cursorOverClickable())
-                                    single.state->createNode(event.mouseButton);
+                                        draggedNode = single.state->nodeAt(sf::Mouse::getPosition(single.window));
+
+                                        inputs.queueReleaseEvent(sf::Mouse::Left, [button, &single, &inputs, &lastClicked, &timesNodeClicked]() {
+                                            if (!inputs.hasMouseMovedSince(inputs.pressedAt(sf::Mouse::Left))) {
+                                                Node* pastNode = single.state->nodeAt(button);
+                                                Node* node = single.state->nodeAt(sf::Mouse::getPosition(single.window));
+
+                                                if (pastNode == node) {
+                                                    single.state->toggleNode(node);
+
+                                                    if (lastClicked != node)
+                                                        timesNodeClicked = 0;
+
+                                                    lastClicked = node;
+                                                    timesNodeClicked++;
+                                                }
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        inputs.queueReleaseEvent(sf::Mouse::Left, [&single, &inputs, &lastClicked, &timesNodeClicked]() {
+                                            auto globalMousePos = sf::Mouse::getPosition(single.window);
+
+                                            if (!inputs.hasMouseMovedSince(inputs.pressedAt(sf::Mouse::Left)) || !inputs.wasHeldLong(sf::Mouse::Left)) {
+                                                single.state->createNode(single.window.mapPixelToCoords(globalMousePos));
+                                                lastClicked = nullptr;
+                                                timesNodeClicked = 0;
+                                            }
+                                        });
+
+                                        inputs.queueHeldLongEvent(sf::Mouse::Left, [&single, &startDrag, &dragPos]() {
+                                            auto globalMousePos = sf::Mouse::getPosition(single.window);
+
+                                            if (!startDrag) {
+                                                startDrag = true;
+
+                                                dragPos = single.window.mapPixelToCoords(
+                                                        sf::Vector2i(globalMousePos.x, globalMousePos.y));
+                                            }
+                                        });
+                                    }
+                                }
                                 else if (single.state->mode == GraphState::Mode::Connect) {
                                     if (single.state->wouldSelect(event.mouseButton)) {
                                         if (!single.state->isNodeSelected()) {
@@ -187,19 +202,16 @@ int launch() {
                                             single.state->deselectNode();
                                         }
                                     }
-                                } else if (single.state->mode == GraphState::Mode::Edit) {
-                                    mouseHeld = true;
-                                    readyToSelect = true;
-
-                                    if (readyDouble)
-                                        activateDouble = true;
-
-                                    readyDouble = true;
                                 }
                             } else if (event.mouseButton.button == sf::Mouse::Right) {
                                 if (single.state->mode == GraphState::Mode::Edit) {
-                                    single.state->deleteNode(single.state->nodeAt(event.mouseButton));
-                                    mouseHeld = false;
+                                    Node* del = single.state->nodeAt(event.mouseButton);
+
+                                    if (draggedNode == del) {
+                                        draggedNode = nullptr;
+                                    }
+
+                                    single.state->deleteNode(del);
                                 } else if (single.state->mode == GraphState::Mode::Connect) {
                                     if (single.state->isNodeSelected())
                                         single.state->deselectNode();
@@ -304,7 +316,7 @@ int launch() {
                 }
             }
             else if (event.type == sf::Event::MouseMoved) {
-                readyToSelect = false;
+
             }
             else if (event.type == sf::Event::MouseWheelScrolled) {
                 sf::Vector2i mousePos(event.mouseWheelScroll.x, event.mouseWheelScroll.y);
@@ -503,27 +515,29 @@ void print() {
 void registerMovement() {
     Single& single = Single::instance();
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Equal)) {
+    InputHelper& inputs = single.inputHelper;
+
+    if (inputs.isPressed(sf::Keyboard::Equal)) {
         single.defaultView.zoom(1.0f/single.ZOOM_SPEED);
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Hyphen)) {
+    if (inputs.isPressed(sf::Keyboard::Hyphen)) {
         single.defaultView.zoom(single.ZOOM_SPEED);
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+    if (inputs.isPressed(sf::Keyboard::Left)) {
         single.defaultView.move(-single.MOVE_SPEED, 0);
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+    if (inputs.isPressed(sf::Keyboard::Right)) {
         single.defaultView.move(single.MOVE_SPEED, 0);
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+    if (inputs.isPressed(sf::Keyboard::Up)) {
         single.defaultView.move(0, -single.MOVE_SPEED);
     }
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+    if (inputs.isPressed(sf::Keyboard::Down)) {
         single.defaultView.move(0, single.MOVE_SPEED);
     }
 }

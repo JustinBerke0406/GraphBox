@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <windows.h>
 #include "GraphState.h"
+#include "InputHelper.h"
 
 class Single {
 private:
@@ -15,7 +16,7 @@ public:
 
     const int WIDTH = 1920, HEIGHT = 1080;
 
-    const float ZOOM_SPEED = 1.05f, MOVE_SPEED = 0.35f, WHEEL_SENS = 1.3f;
+    const float ZOOM_SPEED = 1.05f, MOVE_SPEED = 10.35f, WHEEL_SENS = 1.3f;
 
     const sf::Color NODE_COLOR = sf::Color(240, 240, 240),
                     HIGHLIGHT_COLOR = sf::Color(240, 233, 121),
@@ -25,7 +26,7 @@ public:
     const float EDGE_THICKNESS = 0.02f, ARROW_THICKNESS = 10.0f;
     const float NODE_SIZE = 90.0f;
 
-    const int MOUSE_HOLD_TIME = 3, DOUBLE_CLICK_TIME = 7;
+    static const int HOLD_TIME = 250, DOUBLE_CLICK_TIME = 180;
 
     const int WINDOW_TEXT_SIZE = 16,
               WINDOW_TEXT_X_OFF = 10,
@@ -69,6 +70,8 @@ public:
     char szFile[260];
 
     std::string fileName;
+
+    InputHelper inputHelper;
 
     ~Single();
 };

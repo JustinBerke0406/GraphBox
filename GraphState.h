@@ -22,6 +22,7 @@ public:
     std::string createNode(std::string label, float x, float y);
     std::string createNode(std::string label, sf::Event::MouseButtonEvent event);
     std::string createNode(sf::Event::MouseButtonEvent event);
+    std::string createNode(sf::Vector2f pos);
 
     bool deleteNode(Node* node);
 

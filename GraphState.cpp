@@ -33,6 +33,14 @@ std::string GraphState::createNode(sf::Event::MouseButtonEvent event) {
     return createNode(std::to_string(nodes.size()), event);
 }
 
+std::string GraphState::createNode(sf::Vector2f pos) {
+    for (int i = 0; i < nodes.size(); i++)
+        if (!isLabelTaken(std::to_string(i)))
+            return createNode(std::to_string(i), pos.x, pos.y);
+
+    return createNode(std::to_string(nodes.size()), pos.x, pos.y);
+}
+
 bool GraphState::deleteNode(Node* node) {
     for (int i = 0; i < nodes.size(); i++)
         if (nodes[i] == node) {
