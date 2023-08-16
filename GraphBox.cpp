@@ -207,9 +207,8 @@ int launch() {
                                 if (single.state->mode == GraphState::Mode::Edit) {
                                     Node* del = single.state->nodeAt(event.mouseButton);
 
-                                    if (draggedNode == del) {
+                                    if (draggedNode == del)
                                         draggedNode = nullptr;
-                                    }
 
                                     single.state->deleteNode(del);
                                 } else if (single.state->mode == GraphState::Mode::Connect) {
@@ -314,9 +313,6 @@ int launch() {
                         single.state->mode = single.DEFAULT_MODE;
                     }
                 }
-            }
-            else if (event.type == sf::Event::MouseMoved) {
-
             }
             else if (event.type == sf::Event::MouseWheelScrolled) {
                 sf::Vector2i mousePos(event.mouseWheelScroll.x, event.mouseWheelScroll.y);
