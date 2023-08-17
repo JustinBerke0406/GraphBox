@@ -12,6 +12,8 @@
 int launch() {
     Single& single = Single::instance();
 
+    ::ShowWindow(::GetConsoleWindow(), SW_HIDE);
+
     sf::RenderWindow& window = single.window;
 
     window.setKeyRepeatEnabled(false);
