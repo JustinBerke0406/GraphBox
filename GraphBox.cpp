@@ -647,7 +647,7 @@ void updater() {
     system("powershell -Command \"Remove-Item new_version.txt\" >nul 2>&1");
 
     if (VERSION != tp) {
-        std::cout << "Updating!" << std::endl;
+        std::cout << "Current Version: " + VERSION << "\nLatest Version: " + tp << "\nUpdating..." << std::endl;
 
         STARTUPINFO si = {0};
         PROCESS_INFORMATION pi = {0};
