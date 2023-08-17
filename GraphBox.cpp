@@ -7,6 +7,7 @@
 #include <filesystem>
 #include "GraphBox.h"
 #include "Single.h"
+#include <strsafe.h>
 
 int launch() {
     Single& single = Single::instance();
@@ -625,6 +626,77 @@ std::string fileName(std::string path) {
     return wExt.substr(0, wExt.size()-6);
 }
 
+void updater() {
+    int out = system("powershell -Command \"Invoke-WebRequest https://raw.githubusercontent.com/JustinBerke0406/GraphBox/master/version.txt -OutFile new_version.txt\" >nul 2>&1");
+
+    if (out == 1)
+        return;
+
+    std::ifstream tv = std::ifstream("new_version.txt");
+    std::string tp;
+
+    if (tv.is_open()) {
+        std::getline(tv, tp);
+
+        tv.close();
+    }
+    else {
+        return;
+    }
+
+    system("powershell -Command \"Remove-Item new_version.txt\" >nul 2>&1");
+
+    if (VERSION != tp) {
+        std::cout << "Updating!" << std::endl;
+
+        STARTUPINFO si = {0};
+        PROCESS_INFORMATION pi = {0};
+        si.cb = sizeof(si);
+
+        ZeroMemory(&si, sizeof(si));
+
+        LPSTR cmdLine = "powershell -Command \"Invoke-WebRequest https://github.com/JustinBerke0406/GraphBox/raw/master/cmake-build-debug/GraphBox.exe -OutFile GraphBox_partial.exe\"";
+
+        CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+
+        WaitForSingleObject(pi.hProcess, INFINITE);
+
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+
+        while (!std::filesystem::exists("GraphBox_partial.exe")) { sleep(sf::milliseconds(1)); };
+
+        system("start GraphBox1.exe");
+
+        exit(0);
+    }
+    else if (std::filesystem::exists("GraphBox_partial.exe")) {
+        std::ofstream delbat = std::ofstream("delbat.bat");
+
+        delbat << ":repeat\ndel GraphBox.exe || goto :repeat\n(goto) 2>nul & del \"%~f0\"";
+        delbat.close();
+
+        STARTUPINFO si = {0};
+        PROCESS_INFORMATION pi = {0};
+        si.cb = sizeof(si);
+
+        ZeroMemory(&si, sizeof(si));
+
+        LPSTR cmdLine = "cmd /c delbat.bat";
+
+        CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+
+        WaitForSingleObject(pi.hProcess, INFINITE);
+
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+
+        system("powershell -Command \"Rename-Item -Path GraphBox_partial.exe -NewName GraphBox.exe\" >nul 2>&1");
+    }
+}
+
 int main() {
+    updater();
+
     return launch();
 }

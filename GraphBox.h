@@ -4,6 +4,8 @@
 #include "graph/Node.h"
 #include <windows.h>
 
+const std::string VERSION = "1.0.0";
+
 int launch();
 
 void registerMovement();
@@ -16,5 +18,7 @@ void render();
 
 void loadFile();
 void saveFile();
+
+void updater();
 
 std::string fileName(std::string path);
