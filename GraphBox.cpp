@@ -108,8 +108,7 @@ int launch() {
         window.display();
 
         // Movement and zooming
-        if (single.state->mode != GraphState::Mode::Typing)
-            registerMovement();
+        registerMovement();
 
         if (single.state->cursorOverClickable() && defaultCursor) {
             cursor.loadFromSystem(sf::Cursor::Hand);
@@ -259,7 +258,7 @@ int launch() {
                 }
             }
             else if (event.type == sf::Event::KeyPressed) {
-                if (single.state->mode != GraphState::Mode::Typing) {
+                if (single.state->mode != GraphState::Mode::Typing && !inputs.isCtrlPressed()) {
                     if (event.key.code == sf::Keyboard::C)
                         single.state->toggleConnectMode();
                     else if (event.key.code == sf::Keyboard::D)
@@ -277,10 +276,16 @@ int launch() {
                         single.state->toggleAdjMode();
                     else if (event.key.code == sf::Keyboard::P)
                         print();
+                    else if (event.key.code == sf::Keyboard::Space) {
+                        Node* node = single.state->getSelectedNode();
+
+                        if (node != nullptr)
+                            node->locked = !node->locked;
+                    }
                 }
             }
             else if (event.type == sf::Event::TextEntered) {
-                if (single.state->mode == GraphState::Mode::Typing) {
+                if (single.state->mode == GraphState::Mode::Typing && !inputs.isCtrlPressed()) {
                     int code = event.text.unicode;
                     Node *node = single.state->getSelectedNode();
 
@@ -513,28 +518,45 @@ void registerMovement() {
 
     InputHelper& inputs = single.inputHelper;
 
-    if (inputs.isPressed(sf::Keyboard::Equal)) {
-        single.defaultView.zoom(1.0f/single.ZOOM_SPEED);
+    if (single.state->mode != GraphState::Mode::Typing) {
+        if (inputs.isPressed(sf::Keyboard::Left)) {
+            single.defaultView.move(-single.MOVE_SPEED, 0);
+        }
+
+        if (inputs.isPressed(sf::Keyboard::Right)) {
+            single.defaultView.move(single.MOVE_SPEED, 0);
+        }
+
+        if (inputs.isPressed(sf::Keyboard::Up)) {
+            single.defaultView.move(0, -single.MOVE_SPEED);
+        }
+
+        if (inputs.isPressed(sf::Keyboard::Down)) {
+            single.defaultView.move(0, single.MOVE_SPEED);
+        }
     }
 
-    if (inputs.isPressed(sf::Keyboard::Hyphen)) {
-        single.defaultView.zoom(single.ZOOM_SPEED);
-    }
+    if (inputs.isCtrlPressed()) {
+        if (inputs.isPressed(sf::Keyboard::C)) {
+            if (single.state->isNodeSelected()) {
+                sf::Clipboard::setString(single.state->getSelectedNode()->label);
+            }
+        }
 
-    if (inputs.isPressed(sf::Keyboard::Left)) {
-        single.defaultView.move(-single.MOVE_SPEED, 0);
+        if (inputs.isPressed(sf::Keyboard::V)) {
+            if (single.state->isNodeSelected()) {
+                single.state->getSelectedNode()->label = sf::Clipboard::getString();
+            }
+        }
     }
+    else if (single.state->mode != GraphState::Mode::Typing) {
+        if (inputs.isPressed(sf::Keyboard::Equal)) {
+            single.defaultView.zoom(1.0f/single.ZOOM_SPEED);
+        }
 
-    if (inputs.isPressed(sf::Keyboard::Right)) {
-        single.defaultView.move(single.MOVE_SPEED, 0);
-    }
-
-    if (inputs.isPressed(sf::Keyboard::Up)) {
-        single.defaultView.move(0, -single.MOVE_SPEED);
-    }
-
-    if (inputs.isPressed(sf::Keyboard::Down)) {
-        single.defaultView.move(0, single.MOVE_SPEED);
+        if (inputs.isPressed(sf::Keyboard::Hyphen)) {
+            single.defaultView.zoom(single.ZOOM_SPEED);
+        }
     }
 }
 

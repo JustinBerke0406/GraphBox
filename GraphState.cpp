@@ -78,6 +78,11 @@ void GraphState::drawNodes() {
         circ.setOrigin(circ.getLocalBounds().width/2, circ.getLocalBounds().height/2);
         circ.setOutlineThickness(-0.02f * single.NODE_SIZE);
         circ.setOutlineColor(sf::Color::Black);
+
+        if (n->locked) {
+            circ.setOutlineColor(sf::Color::Red);
+        }
+
         circ.setPointCount(100);
 
         sf::Color fillColor = (n == selectedNode) ? ((!errorLabel) ? single.HIGHLIGHT_COLOR : single.ERROR_COLOR) : single.NODE_COLOR;
@@ -524,6 +529,10 @@ void GraphState::physicsUpdate() {
     }
 
     for (Node* node : nodes) {
+        if (node->locked) {
+            node->velocity = {0, 0};
+        }
+
         node->x += node->velocity.x * single.DELTA_TIME * single.NODE_SIZE;
         node->y += node->velocity.y * single.DELTA_TIME * single.NODE_SIZE;
     }

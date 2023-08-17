@@ -81,4 +81,6 @@ public:
 
     Time mouseLastMoved() const;
     bool hasMouseMovedSince(Time start) const;
+
+    bool isCtrlPressed() const;
 };

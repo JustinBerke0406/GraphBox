@@ -303,3 +303,7 @@ Time InputHelper::mouseLastMoved() const {
 bool InputHelper::hasMouseMovedSince(Time start) const {
     return mouseLastMoved() > start;
 }
+
+bool InputHelper::isCtrlPressed() const {
+    return isPressed(sf::Keyboard::LControl) || isPressed(sf::Keyboard::RControl);
+}
