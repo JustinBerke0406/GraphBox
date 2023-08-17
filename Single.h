@@ -15,6 +15,7 @@ public:
     }
 
     const int WIDTH = 1920, HEIGHT = 1080;
+    const int OP_WIDTH = 600, OP_HEIGHT = 900;
 
     const float ZOOM_SPEED = 1.05f, MOVE_SPEED = 10.35f, WHEEL_SENS = 1.3f;
 
@@ -38,8 +39,10 @@ public:
                 SPRING_CONST = 1.0f,
                 SPRING_REST_LEN = 5.0f,
                 SPRING_FRICTION = 0.01f,
-                NORM_FRICTION = 0.9f,
+                NORM_FRICTION = 10.0f,
                 DELTA_TIME = 0.01f;
+
+    float frictionMult = 0.012f;
 
     const int THREADS = 15;
 
@@ -63,8 +66,9 @@ public:
 
     sf::View defaultView;
     sf::View toolView;
+    //sf::View opView;
 
-    std::vector<std::string> TOOL_BUTTONS = {"Save As", "Save", "Load", "Print", "Connect", "Directed", "Force", "Adjacency", "New"};
+    std::vector<std::string> TOOL_BUTTONS = {"Save As", "Save", "Load", "Print", "Options", "Connect", "Directed", "Force", "Adjacency", "New"};
 
     OPENFILENAME ofn = {0};
     char szFile[260];

@@ -87,6 +87,7 @@ public:
     bool inverseForce = false;
     bool densityMode = false;
     bool adjMode = false;
+    bool optMode = false;
 
     sf::VertexArray points;
 
@@ -98,6 +99,8 @@ public:
     sf::Color gradient(float weight);
 
     void toggleAdjMode();
+
+    void toggleOptMode();
 
     bool adjacentTo(const Node *pNode, const Node *mainNode);
 

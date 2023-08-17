@@ -521,8 +521,8 @@ void GraphState::physicsUpdate() {
                         node2->velocity += scale * unit;
                     }
 
-                    node1->velocity *= single.NORM_FRICTION;
-                    node2->velocity *= single.NORM_FRICTION;
+                    node1->velocity /= (single.NORM_FRICTION - 1) * single.frictionMult + 1;
+                    node2->velocity /= (single.NORM_FRICTION - 1) * single.frictionMult + 1;
                 }
             }
         }
@@ -704,6 +704,10 @@ void GraphState::invertForce() {
     inverseForce = !inverseForce;
 }
 
+void GraphState::toggleOptMode() {
+    optMode = !optMode;
+}
+
 void GraphState::toggleAdjMode() {
     adjMode = !adjMode;
 }
@@ -747,7 +751,8 @@ void GraphState::initToolbox() {
         std::string name = single.TOOL_BUTTONS[i];
 
         if ((forceMode && name == "Force") || (adjMode && name == "Adjacency") ||
-        (directed && name == "Directed") || (mode == Mode::Connect && name == "Connect"))
+        (directed && name == "Directed") || (mode == Mode::Connect && name == "Connect") ||
+        (optMode && name == "Options"))
             button.setFillColor(single.HIGHLIGHT_COLOR);
 
         if (mousePos.y <= toolViewSize.y && mousePos.y >= 0 && mousePos.x > width*i && mousePos.x <= width*(i+1)) {

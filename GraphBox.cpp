@@ -8,6 +8,7 @@
 #include "GraphBox.h"
 #include "Single.h"
 #include <strsafe.h>
+//#include "Slider.h"
 
 int launch() {
     Single& single = Single::instance();
@@ -52,6 +53,9 @@ int launch() {
         // Render
         render();
         single.state->initToolbox();
+
+        if (single.state->optMode)
+            launchSettings();
 
         if (single.state->forceMode)
             single.state->physicsUpdate();
@@ -257,6 +261,9 @@ int launch() {
                             saveFile();
                         else
                             single.state->saveFile(single.fileName);
+                    }
+                    else if (button == "Options") {
+                        single.state->toggleOptMode();
                     }
                 }
             }
@@ -626,6 +633,38 @@ std::string fileName(std::string path) {
     std::string wExt = path.substr(path.find_last_of('\\')+1);
 
     return wExt.substr(0, wExt.size()-6);
+}
+
+void launchSettings() {
+    Single& single = Single::instance();
+
+    //single.window.setView(single.opView);
+
+    const int& WIDTH = single.OP_WIDTH, HEIGHT = single.OP_HEIGHT;
+
+    auto rect = RectangleShape(Vector2f(WIDTH, HEIGHT));
+    rect.setFillColor(Color(230,230,230));
+    rect.setOutlineThickness(-2);
+    rect.setOutlineColor(Color(130,130,130));
+
+    single.window.draw(rect);
+
+    sf::Text text;
+    text.setFont(single.font);
+    text.setCharacterSize(30);
+    text.setFillColor(Color::Black);
+    text.setString("Options");
+    text.setOrigin(text.getLocalBounds().width/2, 0);
+    text.setPosition(WIDTH/2, 5);
+
+    single.window.draw(text);
+
+    //Slider slider = Slider(400, 100, 0, 100, single.frictionMult * 100);
+    //slider.draw(single.window);
+
+    //single.frictionMult = slider.getValue()/100;
+
+    single.window.setView(single.defaultView);
 }
 
 void updater() {
