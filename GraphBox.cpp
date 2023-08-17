@@ -666,7 +666,7 @@ void updater() {
 
         while (!std::filesystem::exists("GraphBox_partial.exe")) { sleep(sf::milliseconds(1)); };
 
-        system("start GraphBox1.exe");
+        system("start GraphBox_partial.exe");
 
         exit(0);
     }
