@@ -5,6 +5,7 @@
 #include "graph/GraphState.h"
 #include "helper/InputHelper.h"
 #include "PhysicsEngine.h"
+#include "ModeHandler.h"
 
 class Single {
 private:
@@ -40,9 +41,9 @@ public:
 
     PhysicsEngine physicsEngine;
 
-    const int THREADS = 15;
+    ModeHandler mode;
 
-    const GraphState::Mode DEFAULT_MODE = GraphState::Mode::Edit;
+    const int THREADS = 15;
 
     const std::string OUTPUT_FILE = ".\\prints\\";
 

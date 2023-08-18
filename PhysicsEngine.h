@@ -5,7 +5,6 @@
 
 class PhysicsEngine {
     static float distance(Node* one, Node* two);
-    static float distanceSq(Node* &one, sf::Vector2i& two);
 public:
     constexpr static float REP_CONST = 1.0f,
             SPRING_CONST = 0.001f,
@@ -17,4 +16,6 @@ public:
     float springRestLen = 5.0f;
 
     void update();
+
+    static void freezeAll();
 };

@@ -44,7 +44,7 @@ void PhysicsEngine::update() {
 
         for (Node* node2 : nodes) {
             if (node1 != node2) {
-                node1->velocity += velVectorRep(node1, node2) * ((state->inverseForce) ? -1.f : 1.f);
+                node1->velocity += velVectorRep(node1, node2) * ((single.mode["inv"]) ? -1.f : 1.f);
             }
         }
 
@@ -100,13 +100,9 @@ float PhysicsEngine::distance(Node *one, Node *two) {
     return sqrt(pow(one->x-two->x, 2)+pow(one->y-two->y, 2));
 }
 
-float PhysicsEngine::distanceSq(Node *&one, Vector2i &two) {
-    Single& single = Single::instance();
+void PhysicsEngine::freezeAll() {
+    auto nodes = Single::instance().state->getNodes();
 
-    auto pos = single.window.mapPixelToCoords(two);
-
-    float dif1 = one->x-pos.x;
-    float dif2 = one->y-pos.y;
-
-    return (dif1*dif1)+(dif2*dif2);
+    for (Node* n : nodes)
+        n->velocity = sf::Vector2f(0, 0);
 }

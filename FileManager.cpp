@@ -34,7 +34,7 @@ void FileManager::save(std::string fileName) {
             file << nodeIndex(node->connections[j]) << "|";
     }
 
-    if (state->directed)
+    if (single.mode["directed"])
         file << "1|";
     else
         file << "0|";
@@ -90,7 +90,7 @@ void FileManager::load(std::string fileName) {
             node->connections.push_back(nodes[std::stoi(pullData())]);
     }
 
-    state->directed = pullData() == "1";
+    single.mode["directed"] = pullData() == "1";
 
     file.close();
 }

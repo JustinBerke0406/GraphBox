@@ -45,11 +45,6 @@ public:
     bool addConnection(Node* to, Node* from = nullptr);
     bool removeConnection(Node* to, Node* from = nullptr);
 
-    void toggleDirectedMode();
-    void toggleConnectMode();
-    void toggleForce();
-    void invertForce();
-
     bool isNodeSelected();
 
     Node* getSelectedNode();
@@ -62,24 +57,9 @@ public:
 
     int getNodeIndex(Node* node);
 
-    enum Mode { Edit, Connect, View, Typing };
-
-    Mode mode = Mode::Edit;
-
-    bool directed = false;
-    bool errorLabel = false;
-    bool forceMode = false;
-    bool inverseForce = false;
-    bool adjMode = false;
-    bool optMode = false;
-
     sf::VertexArray points;
 
     ~GraphState();
-
-    void toggleAdjMode();
-
-    void toggleOptMode();
 
     bool adjacentTo(const Node *pNode, const Node *mainNode) const;
 

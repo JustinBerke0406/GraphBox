@@ -24,9 +24,9 @@ void ViewRenderer::renderToolbar() {
 
         GraphState& state = *single.state;
 
-        if ((state.forceMode && name == "Force") || (state.adjMode && name == "Adjacency") ||
-            (state.directed && name == "Directed") || (state.mode == GraphState::Mode::Connect && name == "Connect") ||
-            (state.optMode && name == "Options"))
+        if ((single.mode["force"] && name == "Force") || (single.mode["adj"] && name == "Adjacency") ||
+            (single.mode["directed"] && name == "Directed") || (single.mode.mainMode == ModeHandler::Mode::Connect && name == "Connect") ||
+            (single.mode["opt"] && name == "Options"))
             button.setFillColor(single.HIGHLIGHT_COLOR);
 
         if (mousePos.y <= toolViewSize.y && mousePos.y >= 0 && mousePos.x > width*i && mousePos.x <= width*(i+1)) {

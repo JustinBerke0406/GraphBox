@@ -9,7 +9,7 @@ void Renderer::drawState() {
     std::vector<sf::CircleShape> circles;
     std::vector<sf::Text> texts;
 
-    if (state->mode == GraphState::Mode::Typing) {
+    if (single.mode["type"]) {
         textBlinker++;
 
         if (textBlinker > single.TEXT_BLINKER_TIME*2)
@@ -32,9 +32,9 @@ void Renderer::drawState() {
 
         circ.setPointCount(100);
 
-        sf::Color fillColor = (n == selectedNode) ? ((!state->errorLabel) ? single.HIGHLIGHT_COLOR : single.ERROR_COLOR) : single.NODE_COLOR;
+        sf::Color fillColor = (n == selectedNode) ? ((!single.mode["error"]) ? single.HIGHLIGHT_COLOR : single.ERROR_COLOR) : single.NODE_COLOR;
 
-        if (state->adjMode && selectedNode != nullptr) {
+        if (single.mode["adj"] && selectedNode != nullptr) {
             if (state->adjacentTo(n, selectedNode))
                 fillColor = single.ADJ_COLOR;
         }
@@ -52,14 +52,14 @@ void Renderer::drawState() {
         text.setString(n->label);
         text.setOrigin(text.getLocalBounds().width/2, 25);
 
-        if (state->mode == GraphState::Mode::Typing && textBlinker < single.TEXT_BLINKER_TIME && n == selectedNode && !n->label.empty()) {
+        if (single.mode["type"] && textBlinker < single.TEXT_BLINKER_TIME && n == selectedNode && !n->label.empty()) {
             text.setString(n->label + "_");
         }
 
         texts.push_back(text);
 
         for (Node* con : n->connections)
-            drawEdge(sf::Vector2f(n->x, n->y), sf::Vector2f(con->x, con->y), true, true, 2*state->directed);
+            drawEdge(sf::Vector2f(n->x, n->y), sf::Vector2f(con->x, con->y), true, true, 2*single.mode["directed"]);
     }
 
     for (int i = 0; i < texts.size(); i++) {
@@ -67,7 +67,7 @@ void Renderer::drawState() {
         single.window.draw(texts[i]);
     }
 
-    if (single.state->mode==GraphState::Mode::Connect
+    if (single.mode.mainMode==ModeHandler::Mode::Connect
         && selectedNode != nullptr
         && state->nodeAt(sf::Mouse::getPosition(single.window)) != selectedNode) {
 
@@ -153,7 +153,7 @@ void Renderer::draw() {
 
     ViewRenderer::renderToolbar();
 
-    if (single.state->optMode)
+    if (single.mode["opt"])
         ViewRenderer::renderOptions();
 }
 

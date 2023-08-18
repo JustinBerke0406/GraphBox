@@ -174,7 +174,7 @@ bool GraphState::addConnection(Node* to, Node* from) {
 
     if (std::any_of(addTo->connections.begin(), addTo->connections.end(), [to](Node* n) {return n == to;})) return false;
 
-    if (!directed && std::any_of(to->connections.begin(), to->connections.end(), [addTo](Node* n) {return n == addTo;})) return false;
+    if (!Single::instance().mode["directed"] && std::any_of(to->connections.begin(), to->connections.end(), [addTo](Node* n) {return n == addTo;})) return false;
 
     addTo->connections.push_back(to);
 
@@ -200,10 +200,6 @@ bool GraphState::removeConnection(Node* to, Node* from) {
     }
 
     return false;
-}
-
-void GraphState::toggleDirectedMode() {
-    directed = !directed;
 }
 
 bool GraphState::isNodeSelected() {
@@ -237,22 +233,6 @@ void GraphState::changeNodePosition(Node *node, sf::Vector2i mousePos) {
     node->y = pos.y;
 }
 
-void GraphState::toggleConnectMode() {
-    if (mode == Mode::Connect)
-        mode = Single::instance().DEFAULT_MODE;
-    else
-        mode = Mode::Connect;
-}
-
-void GraphState::toggleForce() {
-    forceMode = !forceMode;
-
-    if (!forceMode) {
-        for (Node* n : nodes)
-            n->velocity = sf::Vector2f(0, 0);
-    }
-}
-
 std::vector<Node*>& GraphState::getNodes() {
     return nodes;
 }
@@ -266,18 +246,6 @@ int GraphState::getNodeIndex(Node *node) {
     return -1;
 }
 
-void GraphState::invertForce() {
-    inverseForce = !inverseForce;
-}
-
-void GraphState::toggleOptMode() {
-    optMode = !optMode;
-}
-
-void GraphState::toggleAdjMode() {
-    adjMode = !adjMode;
-}
-
 bool GraphState::adjacentTo(const Node *pNode, const Node *mainNode) const {
     if (pNode == mainNode)
         return false;
@@ -286,7 +254,7 @@ bool GraphState::adjacentTo(const Node *pNode, const Node *mainNode) const {
         if (subNodes == pNode)
             return true;
 
-    if (!directed)
+    if (!Single::instance().mode["directed"])
         for (Node* subNodes : pNode->connections)
             if (subNodes == mainNode)
                 return true;
@@ -307,12 +275,7 @@ void GraphState::reset() {
     single.defaultView.reset(sf::FloatRect(0, 0, single.WIDTH, single.HEIGHT));
     single.defaultView.setViewport(sf::FloatRect(0.0f, (float)single.TOOL_HEIGHT / single.HEIGHT, 1.0f, 1.0f));
 
-    mode = Mode::Edit;
-
-    adjMode = false;
-    directed = false;
-    forceMode = false;
-    inverseForce = false;
+    single.mode.clear();
 
     single.window.setTitle("Untitled - GraphBox");
     single.fileName = "";
