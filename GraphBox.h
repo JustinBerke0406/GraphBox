@@ -19,8 +19,6 @@ void render();
 void loadFile();
 void saveFile();
 
-void launchSettings();
-
 void updater();
 
 std::string fileName(std::string path);

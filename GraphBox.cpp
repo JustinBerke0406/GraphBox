@@ -7,9 +7,8 @@
 #include <filesystem>
 #include "GraphBox.h"
 #include "Single.h"
-#include "Slider.h"
 #include <strsafe.h>
-//#include "Slider.h"
+#include "ViewRenderer.h"
 
 int launch() {
     Single& single = Single::instance();
@@ -53,10 +52,6 @@ int launch() {
 
         // Render
         render();
-        single.state->initToolbox();
-
-        if (single.state->optMode)
-            launchSettings();
 
         if (single.state->forceMode)
             single.state->physicsUpdate();
@@ -373,6 +368,11 @@ void render() {
         single.state->densityThreadCaller();
 
     single.state->drawNodes();
+
+    ViewRenderer::renderToolbar();
+
+    if (single.state->optMode)
+        ViewRenderer::renderOptions();
 }
 
 void print() {
@@ -641,75 +641,6 @@ std::string fileName(std::string path) {
     std::string wExt = path.substr(path.find_last_of('\\')+1);
 
     return wExt.substr(0, wExt.size()-6);
-}
-
-void launchSettings() {
-    Single& single = Single::instance();
-
-    single.window.setView(single.opView);
-
-    const int& WIDTH = single.OP_WIDTH, HEIGHT = single.OP_HEIGHT;
-
-    auto rect = RectangleShape(Vector2f(WIDTH, HEIGHT));
-    rect.setFillColor(Color(230,230,230));
-    rect.setOutlineThickness(-2);
-    rect.setOutlineColor(Color(130,130,130));
-
-    single.window.draw(rect);
-
-    sf::Text text;
-    text.setFont(single.font);
-    text.setCharacterSize(30);
-    text.setFillColor(Color::Black);
-    text.setString("Options");
-    text.setOrigin(text.getLocalBounds().width/2, 0);
-    text.setPosition(WIDTH/2, 5);
-
-    single.window.draw(text);
-
-    text.setFont(single.font);
-    text.setCharacterSize(24);
-    text.setFillColor(Color::Black);
-    text.setString("Force: Base Friction");
-    text.setOrigin(0, text.getLocalBounds().height/2);
-    text.setPosition(20, 105);
-
-    single.window.draw(text);
-
-    Slider frSl = Slider(350, 100, 0, 250, single.frictionMult * 100);
-    frSl.draw(single.window);
-
-    single.frictionMult = frSl.getValue()/100;
-
-    text.setFont(single.font);
-    text.setCharacterSize(24);
-    text.setFillColor(Color::Black);
-    text.setString("Force: Edge Friction");
-    text.setOrigin(0, text.getLocalBounds().height/2);
-    text.setPosition(20, 155);
-
-    single.window.draw(text);
-
-    Slider spFrSl = Slider(350, 150, 0, 250, single.spFrictionMult * 100);
-    spFrSl.draw(single.window);
-
-    single.spFrictionMult = spFrSl.getValue()/100;
-
-    text.setFont(single.font);
-    text.setCharacterSize(24);
-    text.setFillColor(Color::Black);
-    text.setString("Force: Edge Rest Length");
-    text.setOrigin(0, text.getLocalBounds().height/2);
-    text.setPosition(20, 205);
-
-    single.window.draw(text);
-
-    Slider restLenSl = Slider(350, 200, 0, 10, single.springRestLen);
-    restLenSl.draw(single.window);
-
-    single.springRestLen = restLenSl.getValue();
-
-    single.window.setView(single.defaultView);
 }
 
 void updater() {
