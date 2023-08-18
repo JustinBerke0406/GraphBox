@@ -2,8 +2,9 @@
 
 #include <SFML/Graphics.hpp>
 #include <windows.h>
-#include "GraphState.h"
-#include "InputHelper.h"
+#include "graph/GraphState.h"
+#include "helper/InputHelper.h"
+#include "PhysicsEngine.h"
 
 class Single {
 private:
@@ -35,16 +36,9 @@ public:
 
     const int TEXT_BLINKER_TIME = 30;
 
-    const float REP_CONST = 1.0f,
-                SPRING_CONST = 0.001f,
-                SPRING_REST_LEN = 5.0f,
-                SPRING_FRICTION = 0.01f,
-                NORM_FRICTION = 0.01f,
-                DELTA_TIME = 0.01f;
+    const float DELTA_TIME = 0.01f;
 
-    float frictionMult = 0.5f;
-    float spFrictionMult = 0.0f;
-    float springRestLen = 5.0f;
+    PhysicsEngine physicsEngine;
 
     const int THREADS = 15;
 

@@ -1,6 +1,5 @@
 #include <cmath>
 #include <iostream>
-#include <fstream>
 #include <unordered_set>
 #include <thread>
 #include <tchar.h>
@@ -8,8 +7,10 @@
 #include "GraphBox.h"
 #include "Single.h"
 #include <strsafe.h>
-#include "ViewRenderer.h"
 #include "FileManager.h"
+#include "helper/ViewHelper.h"
+#include "rendering/Renderer.h"
+#include "PhysicsEngine.h"
 
 int launch() {
     Single& single = Single::instance();
@@ -41,6 +42,8 @@ int launch() {
 
     int timesNodeClicked = 0;
 
+    Renderer render;
+
     // For loop to keep window open
     while (window.isOpen())
     {
@@ -55,7 +58,7 @@ int launch() {
         render();
 
         if (single.state->forceMode)
-            single.state->physicsUpdate();
+            single.physicsEngine.update();
 
         if (inputs.didMultiPress(sf::Mouse::Left) && timesNodeClicked >= 2) {
             Node* node = single.state->nodeAt(sf::Mouse::getPosition(single.window));
@@ -114,13 +117,13 @@ int launch() {
         // Movement and zooming
         registerMovement();
 
-        if (single.state->cursorOverClickable() && defaultCursor) {
+        if (ViewHelper::cursorOverClickable() && defaultCursor) {
             cursor.loadFromSystem(sf::Cursor::Hand);
             window.setMouseCursor(cursor);
 
             defaultCursor = false;
         }
-        else if (!single.state->cursorOverClickable() && !defaultCursor) {
+        else if (!ViewHelper::cursorOverClickable() && !defaultCursor) {
             cursor.loadFromSystem(sf::Cursor::Arrow);
             window.setMouseCursor(cursor);
 
@@ -140,7 +143,7 @@ int launch() {
                         if (single.state->mode != GraphState::Mode::Typing) {
                             if (event.mouseButton.button == sf::Mouse::Left) {
                                 if (single.state->mode == GraphState::Mode::Edit) {
-                                    if (single.state->cursorOverClickable()) {
+                                    if (ViewHelper::cursorOverClickable()) {
                                         auto button = event.mouseButton;
 
                                         draggedNode = single.state->nodeAt(sf::Mouse::getPosition(single.window));
@@ -231,7 +234,8 @@ int launch() {
                     }
                 }
                 else if (single.window.getViewport(single.toolView).contains(sf::Vector2<int>(event.mouseButton.x, event.mouseButton.y))) {
-                    std::string button = single.state->getButtonAtPoint(sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
+                    std::string button = ViewHelper::getToolboxButtonAtPoint(
+                            sf::Vector2i(event.mouseButton.x, event.mouseButton.y));
 
                     if (button == "Connect")
                         single.state->toggleConnectMode();
@@ -358,22 +362,6 @@ void onMouseHeld(sf::Vector2f offset, Node* node) {
         auto pos = single.window.mapPixelToCoords(sf::Mouse::getPosition(single.window));
         single.state->changeNodePositionLocally(node, pos - offset);
     }
-}
-
-void render() {
-    Single& single = Single::instance();
-
-    sf::RenderWindow& window = single.window;
-
-    if (single.state->densityMode)
-        single.state->densityThreadCaller();
-
-    single.state->drawNodes();
-
-    ViewRenderer::renderToolbar();
-
-    if (single.state->optMode)
-        ViewRenderer::renderOptions();
 }
 
 void print() {

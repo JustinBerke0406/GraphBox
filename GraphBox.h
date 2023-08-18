@@ -14,8 +14,6 @@ void onMouseHeld(sf::Vector2f offset, Node* node);
 
 void print();
 
-void render();
-
 void loadFile();
 void saveFile();
 
