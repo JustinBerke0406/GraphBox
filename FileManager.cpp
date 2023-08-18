@@ -94,3 +94,68 @@ void FileManager::load(std::string fileName) {
 
     file.close();
 }
+
+void FileManager::saveDialog() {
+    Single& single = Single::instance();
+
+    HANDLE hf;              // file handle
+
+    auto& ofn = single.ofn;
+
+    ofn.lpstrFile = single.szFile;
+
+    if (GetSaveFileName(&ofn) == TRUE) {
+        hf = CreateFile(ofn.lpstrFile,
+                        GENERIC_READ,
+                        0,
+                        (LPSECURITY_ATTRIBUTES) NULL,
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        (HANDLE) NULL);
+
+        CloseHandle(hf);
+
+        FileManager::save(single.szFile);
+
+        single.window.setTitle(fileName(single.szFile) + " - GraphBox");
+
+        single.fileName = single.szFile;
+
+        std::filesystem::current_path("../");
+    }
+}
+
+void FileManager::loadDialog() {
+    Single& single = Single::instance();
+
+    HANDLE hf;              // file handle
+
+    auto& ofn = single.ofn;
+    ofn.lpstrFile[0] = '\0';
+
+    if (GetOpenFileName(&ofn) == TRUE) {
+        hf = CreateFile(ofn.lpstrFile,
+                        GENERIC_READ,
+                        0,
+                        (LPSECURITY_ATTRIBUTES) NULL,
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        (HANDLE) NULL);
+
+        CloseHandle(hf);
+
+        FileManager::load(single.szFile);
+
+        single.window.setTitle(fileName(single.szFile) + " - GraphBox");
+
+        single.fileName = single.szFile;
+
+        std::filesystem::current_path("../");
+    }
+}
+
+std::string FileManager::fileName(std::string path) {
+    std::string wExt = path.substr(path.find_last_of('\\')+1);
+
+    return wExt.substr(0, wExt.size()-6);
+}

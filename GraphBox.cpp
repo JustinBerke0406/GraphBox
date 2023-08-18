@@ -249,7 +249,7 @@ int launch() {
                         single.mode.toggle("adj");
                     else if (button == "Print") {
                         if (single.fileName.empty())
-                            saveFile();
+                            FileManager::saveDialog();
 
                         if (!single.fileName.empty())
                             print();
@@ -257,12 +257,12 @@ int launch() {
                     else if (button == "New")
                         single.state->reset();
                     else if (button == "Save As")
-                        saveFile();
+                        FileManager::saveDialog();
                     else if (button == "Load")
-                        loadFile();
+                        FileManager::loadDialog();
                     else if (button == "Save") {
                         if (single.fileName.empty())
-                            saveFile();
+                            FileManager::saveDialog();
                         else
                             FileManager::save(single.fileName);
                     }
@@ -516,7 +516,9 @@ void print() {
         }
     }
 
-    auto fileNames = single.OUTPUT_FILE + fileName(single.fileName) + ((single.mode["directed"]) ? "_Directed" : "") + ".txt";
+    std::string wExt = single.fileName.substr(single.fileName.find_last_of('\\')+1);
+
+    auto fileNames = single.OUTPUT_FILE + wExt.substr(0, wExt.size()-6) + ((single.mode["directed"]) ? "_Directed" : "") + ".txt";
     std::ofstream out(fileNames);
 
     if (!out.is_open())
@@ -561,6 +563,13 @@ void registerMovement() {
                 single.state->getSelectedNode()->label = sf::Clipboard::getString();
             }
         }
+
+        if (inputs.isPressed(sf::Keyboard::S)) {
+            if (single.fileName.empty())
+                FileManager::saveDialog();
+            else
+                FileManager::save(single.fileName);
+        }
     }
     else if (!single.mode["type"]) {
         if (inputs.isPressed(sf::Keyboard::Equal)) {
@@ -571,71 +580,6 @@ void registerMovement() {
             single.defaultView.zoom(single.ZOOM_SPEED);
         }
     }
-}
-
-void loadFile() {
-    Single& single = Single::instance();
-
-    HANDLE hf;              // file handle
-
-    auto& ofn = single.ofn;
-    ofn.lpstrFile[0] = '\0';
-
-    if (GetOpenFileName(&ofn) == TRUE) {
-        hf = CreateFile(ofn.lpstrFile,
-                        GENERIC_READ,
-                        0,
-                        (LPSECURITY_ATTRIBUTES) NULL,
-                        OPEN_EXISTING,
-                        FILE_ATTRIBUTE_NORMAL,
-                        (HANDLE) NULL);
-
-        CloseHandle(hf);
-
-        FileManager::load(single.szFile);
-
-        single.window.setTitle(fileName(single.szFile) + " - GraphBox");
-
-        single.fileName = single.szFile;
-
-        std::filesystem::current_path("../");
-    }
-}
-
-void saveFile() {
-    Single& single = Single::instance();
-
-    HANDLE hf;              // file handle
-
-    auto& ofn = single.ofn;
-
-    ofn.lpstrFile = single.szFile;
-
-    if (GetSaveFileName(&ofn) == TRUE) {
-        hf = CreateFile(ofn.lpstrFile,
-                        GENERIC_READ,
-                        0,
-                        (LPSECURITY_ATTRIBUTES) NULL,
-                        OPEN_EXISTING,
-                        FILE_ATTRIBUTE_NORMAL,
-                        (HANDLE) NULL);
-
-        CloseHandle(hf);
-
-        FileManager::save(single.szFile);
-
-        single.window.setTitle(fileName(single.szFile) + " - GraphBox");
-
-        single.fileName = single.szFile;
-
-        std::filesystem::current_path("../");
-    }
-}
-
-std::string fileName(std::string path) {
-    std::string wExt = path.substr(path.find_last_of('\\')+1);
-
-    return wExt.substr(0, wExt.size()-6);
 }
 
 void updater() {
