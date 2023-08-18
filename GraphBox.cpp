@@ -9,6 +9,7 @@
 #include "Single.h"
 #include <strsafe.h>
 #include "ViewRenderer.h"
+#include "FileManager.h"
 
 int launch() {
     Single& single = Single::instance();
@@ -257,7 +258,7 @@ int launch() {
                         if (single.fileName.empty())
                             saveFile();
                         else
-                            single.state->saveFile(single.fileName);
+                            FileManager::save(single.fileName);
                     }
                     else if (button == "Options") {
                         single.state->toggleOptMode();
@@ -597,7 +598,7 @@ void loadFile() {
 
         CloseHandle(hf);
 
-        single.state->loadFile(single.szFile);
+        FileManager::load(single.szFile);
 
         single.window.setTitle(fileName(single.szFile) + " - GraphBox");
 
@@ -627,7 +628,7 @@ void saveFile() {
 
         CloseHandle(hf);
 
-        single.state->saveFile(single.szFile);
+        FileManager::save(single.szFile);
 
         single.window.setTitle(fileName(single.szFile) + " - GraphBox");
 

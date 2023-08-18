@@ -69,7 +69,7 @@ public:
     float distance(Node* one, Node* two);
     float distanceSq(Node* &one, sf::Vector2i& two);
 
-    std::vector<Node*> getNodes();
+    std::vector<Node*>& getNodes();
 
     int getNodeIndex(Node* node);
 
@@ -107,8 +107,4 @@ public:
     std::string getButtonAtPoint(sf::Vector2i vector2);
 
     void reset();
-
-    void saveFile(std::string filename);
-
-    void loadFile(std::string filename);
 };
