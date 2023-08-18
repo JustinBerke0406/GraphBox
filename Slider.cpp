@@ -62,7 +62,7 @@ void Slider::draw(RenderWindow& window) {
 }
 
 void Slider::onInteract(RenderWindow& window) {
-    auto mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), Single::instance().defaultView);
+    auto mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), Single::instance().opView);
     auto bounds = axis.getGlobalBounds();
 
     bounds.width += 1;
@@ -70,6 +70,6 @@ void Slider::onInteract(RenderWindow& window) {
     if (bounds.contains(mousePos.x, mousePos.y) && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
         int diff = mousePos.x - xCord;
 
-        setValue(100 * (float) diff/ width);
+        setValue(getRange() * (float) diff/ width);
     }
 }

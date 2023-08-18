@@ -463,12 +463,11 @@ void GraphState::physicsUpdate() {
         auto unitVector = sf::Vector2f(one->x - two->x, one->y - two->y) / dist;
         return unitVector*single.REP_CONST/(float)pow(fmax(dist, single.NODE_SIZE), 2);};
 
-    auto velVectorSpring = [&single, this, mag](Node* one, Node* two) {
-        sf::Vector2f unit(two->x - one->x, two->y - one->y);
-        unit /= mag(unit);
-        auto dist = distance(one, two) / single.NODE_SIZE;
-        sf::Vector2f spring = unit*single.SPRING_CONST*((float)pow(dist - single.SPRING_REST_LEN, 2))/(float)dist;
-        float sign = ((dist > single.SPRING_REST_LEN) ? 1.0f : -1.0f);
+    auto velVectorSpring = [&single, this](Node* one, Node* two) {
+        auto dist = distance(one, two)/single.NODE_SIZE;
+        auto unitVector = sf::Vector2f(one->x - two->x, one->y - two->y) / dist;
+        auto spring = unitVector*single.SPRING_CONST*(float)pow(dist - single.springRestLen, 2);
+        float sign = ((dist < single.springRestLen) ? 1.0f : -1.0f);
 
         return spring*sign;
     };
@@ -481,12 +480,12 @@ void GraphState::physicsUpdate() {
             if (single.SPRING_FRICTION >= mag(node1->velocity))
                 node1->velocity = sf::Vector2f(0, 0);
             else
-                node1->velocity -= (node1->velocity/mag(node1->velocity))*single.SPRING_FRICTION;
+                node1->velocity -= (node1->velocity/mag(node1->velocity))*single.SPRING_FRICTION*single.spFrictionMult;
 
             if (single.SPRING_FRICTION >= mag(cons->velocity))
                 cons->velocity = sf::Vector2f(0, 0);
             else
-                cons->velocity -= (cons->velocity/mag(cons->velocity))*single.SPRING_FRICTION;
+                cons->velocity -= (cons->velocity/mag(cons->velocity))*single.SPRING_FRICTION*single.spFrictionMult;
         }
 
         for (Node* node2 : nodes) {
@@ -521,8 +520,8 @@ void GraphState::physicsUpdate() {
                         node2->velocity += scale * unit;
                     }
 
-                    node1->velocity /= (single.NORM_FRICTION - 1) * single.frictionMult + 1;
-                    node2->velocity /= (single.NORM_FRICTION - 1) * single.frictionMult + 1;
+                    //node1->velocity /= (single.NORM_FRICTION - 1) * single.frictionMult + 1;
+                    //node2->velocity /= ((single.NORM_FRICTION - 1) * single.frictionMult + 1);
                 }
             }
         }
@@ -531,6 +530,21 @@ void GraphState::physicsUpdate() {
     for (Node* node : nodes) {
         if (node->locked) {
             node->velocity = {0, 0};
+        }
+
+        auto v = node->velocity;
+        float mag = sqrt(pow(v.x, 2)+pow(v.y, 2));
+
+        if (mag == 0)
+            continue;
+
+        v *= single.NORM_FRICTION * single.frictionMult / mag;
+
+        if (abs(v.x) >= abs(node->velocity.x)) {
+            node->velocity = {0, 0};
+        }
+        else {
+            node->velocity -= v;
         }
 
         node->x += node->velocity.x * single.DELTA_TIME * single.NODE_SIZE;

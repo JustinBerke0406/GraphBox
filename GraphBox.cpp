@@ -7,6 +7,7 @@
 #include <filesystem>
 #include "GraphBox.h"
 #include "Single.h"
+#include "Slider.h"
 #include <strsafe.h>
 //#include "Slider.h"
 
@@ -137,7 +138,8 @@ int launch() {
                 window.close();
                 // Mouse clicked event
             else if (event.type == sf::Event::MouseButtonPressed) {
-                if (single.window.getViewport(single.defaultView).contains(sf::Vector2<int>(event.mouseButton.x, event.mouseButton.y))) {
+                if (single.window.getViewport(single.defaultView).contains(sf::Vector2<int>(event.mouseButton.x, event.mouseButton.y)) &&
+                !(single.window.getViewport(single.opView).contains(sf::Vector2<int>(event.mouseButton.x, event.mouseButton.y)) && single.state->optMode)) {
                     if (single.state->mode != GraphState::Mode::View) {
                         if (single.state->mode != GraphState::Mode::Typing) {
                             if (event.mouseButton.button == sf::Mouse::Left) {
@@ -291,6 +293,12 @@ int launch() {
 
                         if (node != nullptr)
                             node->locked = !node->locked;
+                    }
+                    else if (event.key.code == sf::Keyboard::O) {
+                        single.state->toggleOptMode();
+                    }
+                    else if (event.key.code == sf::Keyboard::Escape && single.state->optMode) {
+                        single.state->optMode = false;
                     }
                 }
             }
@@ -638,7 +646,7 @@ std::string fileName(std::string path) {
 void launchSettings() {
     Single& single = Single::instance();
 
-    //single.window.setView(single.opView);
+    single.window.setView(single.opView);
 
     const int& WIDTH = single.OP_WIDTH, HEIGHT = single.OP_HEIGHT;
 
@@ -659,10 +667,47 @@ void launchSettings() {
 
     single.window.draw(text);
 
-    //Slider slider = Slider(400, 100, 0, 100, single.frictionMult * 100);
-    //slider.draw(single.window);
+    text.setFont(single.font);
+    text.setCharacterSize(24);
+    text.setFillColor(Color::Black);
+    text.setString("Force: Base Friction");
+    text.setOrigin(0, text.getLocalBounds().height/2);
+    text.setPosition(20, 105);
 
-    //single.frictionMult = slider.getValue()/100;
+    single.window.draw(text);
+
+    Slider frSl = Slider(350, 100, 0, 250, single.frictionMult * 100);
+    frSl.draw(single.window);
+
+    single.frictionMult = frSl.getValue()/100;
+
+    text.setFont(single.font);
+    text.setCharacterSize(24);
+    text.setFillColor(Color::Black);
+    text.setString("Force: Edge Friction");
+    text.setOrigin(0, text.getLocalBounds().height/2);
+    text.setPosition(20, 155);
+
+    single.window.draw(text);
+
+    Slider spFrSl = Slider(350, 150, 0, 250, single.spFrictionMult * 100);
+    spFrSl.draw(single.window);
+
+    single.spFrictionMult = spFrSl.getValue()/100;
+
+    text.setFont(single.font);
+    text.setCharacterSize(24);
+    text.setFillColor(Color::Black);
+    text.setString("Force: Edge Rest Length");
+    text.setOrigin(0, text.getLocalBounds().height/2);
+    text.setPosition(20, 205);
+
+    single.window.draw(text);
+
+    Slider restLenSl = Slider(350, 200, 0, 10, single.springRestLen);
+    restLenSl.draw(single.window);
+
+    single.springRestLen = restLenSl.getValue();
 
     single.window.setView(single.defaultView);
 }

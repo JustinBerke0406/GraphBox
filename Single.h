@@ -36,13 +36,15 @@ public:
     const int TEXT_BLINKER_TIME = 30;
 
     const float REP_CONST = 1.0f,
-                SPRING_CONST = 1.0f,
+                SPRING_CONST = 0.001f,
                 SPRING_REST_LEN = 5.0f,
                 SPRING_FRICTION = 0.01f,
-                NORM_FRICTION = 10.0f,
+                NORM_FRICTION = 0.01f,
                 DELTA_TIME = 0.01f;
 
-    float frictionMult = 0.012f;
+    float frictionMult = 0.5f;
+    float spFrictionMult = 0.0f;
+    float springRestLen = 5.0f;
 
     const int THREADS = 15;
 
@@ -66,7 +68,7 @@ public:
 
     sf::View defaultView;
     sf::View toolView;
-    //sf::View opView;
+    sf::View opView;
 
     std::vector<std::string> TOOL_BUTTONS = {"Save As", "Save", "Load", "Print", "Options", "Connect", "Directed", "Force", "Adjacency", "New"};
 
