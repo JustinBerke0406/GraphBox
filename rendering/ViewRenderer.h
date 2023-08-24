@@ -1,5 +1,5 @@
 #include "../Single.h"
-#include "../Slider.h"
+#include "../option_types/Slider.h"
 
 #pragma once
 

@@ -1,4 +1,5 @@
 #include "ViewRenderer.h"
+#include "../option_types/Checkbox.h"
 
 void ViewRenderer::renderToolbar() {
     Single& single = Single::instance();
@@ -74,47 +75,44 @@ void ViewRenderer::renderOptions() {
 
     single.window.draw(text);
 
-    text.setFont(single.font);
-    text.setCharacterSize(24);
-    text.setFillColor(Color::Black);
-    text.setString("Force: Base Friction");
-    text.setOrigin(0, text.getLocalBounds().height/2);
-    text.setPosition(20, 105);
+    auto write = [&text, &single](const std::string& msg, int y) {
+        text.setFont(single.font);
+        text.setCharacterSize(24);
+        text.setFillColor(Color::Black);
+        text.setString(msg);
+        text.setOrigin(0, text.getLocalBounds().height/2);
+        text.setPosition(20, y);
 
-    single.window.draw(text);
+        single.window.draw(text);
+    };
+
+    write("Force: Base Friction", 105);
 
     Slider frSl = Slider(350, 100, 0, 250, single.physicsEngine.frictionMult * 100);
     frSl.draw(single.window);
 
     single.physicsEngine.frictionMult = frSl.getValue()/100;
 
-    text.setFont(single.font);
-    text.setCharacterSize(24);
-    text.setFillColor(Color::Black);
-    text.setString("Force: Edge Friction");
-    text.setOrigin(0, text.getLocalBounds().height/2);
-    text.setPosition(20, 155);
-
-    single.window.draw(text);
+    write("Force: Edge Friction", 155);
 
     Slider spFrSl = Slider(350, 150, 0, 250, single.physicsEngine.spFrictionMult * 100);
     spFrSl.draw(single.window);
 
     single.physicsEngine.spFrictionMult = spFrSl.getValue()/100;
 
-    text.setFont(single.font);
-    text.setCharacterSize(24);
-    text.setFillColor(Color::Black);
-    text.setString("Force: Edge Rest Length");
-    text.setOrigin(0, text.getLocalBounds().height/2);
-    text.setPosition(20, 205);
-
-    single.window.draw(text);
+    write("Force: Edge Rest Length", 205);
 
     Slider restLenSl = Slider(350, 200, 0, 10, single.physicsEngine.springRestLen);
     restLenSl.draw(single.window);
 
     single.physicsEngine.springRestLen = restLenSl.getValue();
+
+    write("1-Indexing", 305);
+
+    single.indexObject.setValue(single.oneIndexing);
+    single.indexObject.draw(single.window);
+
+    single.oneIndexing = single.indexObject.getValue();
 
     single.window.setView(single.defaultView);
 }

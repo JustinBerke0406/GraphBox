@@ -6,6 +6,7 @@
 #include "helper/InputHelper.h"
 #include "PhysicsEngine.h"
 #include "ModeHandler.h"
+#include "option_types/Checkbox.h"
 
 class Single {
 private:
@@ -49,7 +50,10 @@ public:
 
     int files = 0;
 
+    bool oneIndexing = false;
     bool indexOrdering = true;
+
+    Checkbox indexObject = Checkbox(160, 295, false);
 
     sf::RenderWindow window;
     GraphState* state;

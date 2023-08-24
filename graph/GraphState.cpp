@@ -33,7 +33,9 @@ std::string GraphState::createNode(sf::Event::MouseButtonEvent event) {
 }
 
 std::string GraphState::createNode(sf::Vector2f pos) {
-    for (int i = 0; i < nodes.size(); i++)
+    int indexStart = Single::instance().oneIndexing;
+
+    for (int i = indexStart; i <= nodes.size() + indexStart; i++)
         if (!isLabelTaken(std::to_string(i)))
             return createNode(std::to_string(i), pos.x, pos.y);
 
@@ -240,7 +242,7 @@ std::vector<Node*>& GraphState::getNodes() {
 int GraphState::getNodeIndex(Node *node) {
     for (int i = 0; i < nodes.size(); i++) {
         if (node == nodes[i])
-            return i + 1;
+            return i + Single::instance().oneIndexing;
     }
 
     return -1;
