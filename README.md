@@ -9,6 +9,6 @@ A windowed application for creating graphs and maps; a useful tool for graph the
 
 ## Installation
 
-You can find the latest releases at the [Releases](https://github.com/JustinBerke0406/GraphBox/releases) page.
+You can find the latest release at the [Releases](https://github.com/JustinBerke0406/GraphBox/releases) page.
 
 To install, download and extract the compressed `graphbox` file. From there, the program can be launched from the unpacked exeutable.
