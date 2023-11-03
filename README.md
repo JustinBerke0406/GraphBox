@@ -1,6 +1,8 @@
 # GraphBox
 A windowed application for creating graphs and maps; a useful tool for graph theory.
 
+![logo](https://github.com/JustinBerke0406/GraphBox/assets/52087129/4acc51b0-1cb3-446c-83f7-8df3b6aec4a3)
+
 ## Features
 - An infinitely large area to create your graphs
 - Directed and undirected options
