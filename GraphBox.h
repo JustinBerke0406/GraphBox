@@ -4,7 +4,7 @@
 #include "graph/Node.h"
 #include <windows.h>
 
-const std::string VERSION = "1.1.2";
+const std::string VERSION = "1.1.3";
 
 int launch();
 
@@ -13,5 +13,3 @@ void registerMovement();
 void onMouseHeld(sf::Vector2f offset, Node* node);
 
 void print();
-
-void updater();

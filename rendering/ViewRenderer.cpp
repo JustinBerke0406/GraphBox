@@ -1,5 +1,4 @@
 #include "ViewRenderer.h"
-#include "../option_types/Checkbox.h"
 
 void ViewRenderer::renderToolbar() {
     Single& single = Single::instance();
