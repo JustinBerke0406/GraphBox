@@ -34,3 +34,9 @@ void Checkbox::onInteract(sf::RenderWindow& window) {
 
     updateValueDependents();
 }
+
+bool Checkbox::isMouseOver(RenderWindow &window) {
+    auto mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), Single::instance().opView);
+
+    return box.getGlobalBounds().contains(mousePos.x, mousePos.y);
+}

@@ -40,6 +40,12 @@ void FileManager::save(std::string fileName) {
         file << "0|";
 
     file.close();
+
+    single.window.setTitle(getFileName(fileName) + " - GraphBox");
+
+    single.fileName = fileName;
+
+    std::filesystem::current_path("../");
 }
 
 void FileManager::load(std::string fileName) {
@@ -93,6 +99,12 @@ void FileManager::load(std::string fileName) {
     single.mode["directed"] = pullData() == "1";
 
     file.close();
+
+    single.window.setTitle(getFileName(fileName) + " - GraphBox");
+
+    single.fileName = fileName;
+
+    std::filesystem::current_path("../");
 }
 
 void FileManager::saveDialog() {
@@ -116,12 +128,6 @@ void FileManager::saveDialog() {
         CloseHandle(hf);
 
         FileManager::save(single.szFile);
-
-        single.window.setTitle(fileName(single.szFile) + " - GraphBox");
-
-        single.fileName = single.szFile;
-
-        std::filesystem::current_path("../");
     }
 }
 
@@ -145,16 +151,10 @@ void FileManager::loadDialog() {
         CloseHandle(hf);
 
         FileManager::load(single.szFile);
-
-        single.window.setTitle(fileName(single.szFile) + " - GraphBox");
-
-        single.fileName = single.szFile;
-
-        std::filesystem::current_path("../");
     }
 }
 
-std::string FileManager::fileName(std::string path) {
+std::string FileManager::getFileName(std::string path) {
     std::string wExt = path.substr(path.find_last_of('\\')+1);
 
     return wExt.substr(0, wExt.size()-6);

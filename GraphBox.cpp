@@ -3,19 +3,15 @@
 #include <unordered_set>
 #include <thread>
 #include <tchar.h>
-#include <filesystem>
 #include "GraphBox.h"
 #include "Single.h"
-#include <strsafe.h>
 #include "FileManager.h"
 #include "helper/ViewHelper.h"
 #include "rendering/Renderer.h"
 #include "PhysicsEngine.h"
 
-int launch() {
+int launch(std::string filepath) {
     Single& single = Single::instance();
-
-    //ShowWindow(GetConsoleWindow(), SW_HIDE);
 
     sf::RenderWindow& window = single.window;
 
@@ -43,6 +39,9 @@ int launch() {
     int timesNodeClicked = 0;
 
     Renderer render;
+
+    if (!filepath.empty())
+        FileManager::load(filepath);
 
     // For loop to keep window open
     while (window.isOpen())
@@ -117,7 +116,7 @@ int launch() {
         // Movement and zooming
         registerMovement();
 
-        if (ViewHelper::cursorOverClickable() && defaultCursor) {
+        if (ViewHelper::cursorOverClickable()) {
             cursor.loadFromSystem(sf::Cursor::Hand);
             window.setMouseCursor(cursor);
 
@@ -588,5 +587,10 @@ int CALLBACK WinMain(
         LPSTR       lpCmdLine,
         int         nCmdShow
 ) {
-    return launch();
+    std::string filepath(lpCmdLine);
+
+    if (!filepath.empty())
+        filepath = filepath.substr(1, filepath.length()-2);
+
+    return launch(filepath);
 }

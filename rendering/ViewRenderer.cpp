@@ -55,7 +55,7 @@ void ViewRenderer::renderOptions() {
 
     single.window.setView(single.opView);
 
-    const int& WIDTH = single.OP_WIDTH, HEIGHT = single.OP_HEIGHT;
+    const int& WIDTH = single.OP_WIDTH_PER*single.WIDTH, HEIGHT = single.OP_HEIGHT_PER*single.HEIGHT;
 
     auto rect = RectangleShape(Vector2f(WIDTH, HEIGHT));
     rect.setFillColor(Color(230,230,230));
@@ -87,31 +87,40 @@ void ViewRenderer::renderOptions() {
 
     write("Force: Base Friction", 105);
 
-    Slider frSl = Slider(350, 100, 0, 250, single.physicsEngine.frictionMult * 100);
-    frSl.draw(single.window);
+    Slider& bSlider = single.sliderSettings.at("baseFriction");
+    bSlider.draw(single.window);
 
-    single.physicsEngine.frictionMult = frSl.getValue()/100;
+    single.physicsEngine.frictionMult = bSlider.getValue()/100;
 
     write("Force: Edge Friction", 155);
 
-    Slider spFrSl = Slider(350, 150, 0, 250, single.physicsEngine.spFrictionMult * 100);
-    spFrSl.draw(single.window);
+    Slider& eSlider = single.sliderSettings.at("edgeFriction");
+    eSlider.draw(single.window);
 
-    single.physicsEngine.spFrictionMult = spFrSl.getValue()/100;
+    single.physicsEngine.spFrictionMult = eSlider.getValue()/100;
 
     write("Force: Edge Rest Length", 205);
 
-    Slider restLenSl = Slider(350, 200, 0, 10, single.physicsEngine.springRestLen);
-    restLenSl.draw(single.window);
+    Slider& rSlider = single.sliderSettings.at("restLength");
+    rSlider.draw(single.window);
 
-    single.physicsEngine.springRestLen = restLenSl.getValue();
+    single.physicsEngine.springRestLen = rSlider.getValue();
 
-    write("1-Indexing", 305);
+    write("Force: Invert", 255);
 
-    single.indexObject.setValue(single.oneIndexing);
-    single.indexObject.draw(single.window);
+    Checkbox& iCheckbox = single.checkSettings.at("forceInverse");
 
-    single.oneIndexing = single.indexObject.getValue();
+    iCheckbox.draw(single.window);
+
+    single.mode["inv"] = iCheckbox.getValue();
+
+    write("1-Indexing", 355);
+
+    Checkbox& oCheckbox = single.checkSettings.at("oneIndexing");
+
+    oCheckbox.draw(single.window);
+
+    single.oneIndexing = oCheckbox.getValue();
 
     single.window.setView(single.defaultView);
 }

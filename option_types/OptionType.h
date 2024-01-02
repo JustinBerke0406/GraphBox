@@ -19,6 +19,8 @@ public:
     T getValue() const;
 
     virtual void draw(sf::RenderWindow& window) = 0;
+
+    virtual bool isMouseOver(sf::RenderWindow& window) = 0;
 };
 
 template<typename T>

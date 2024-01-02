@@ -1,8 +1,20 @@
 #include "Single.h"
 #include <iostream>
+#include <filesystem>
 
 Single::Single() {
-    HWND hwnd;              // owner window
+    CHAR pBuf[MAX_PATH];
+    GetModuleFileNameA(nullptr, pBuf, MAX_PATH);
+
+    std::filesystem::current_path(std::filesystem::path(pBuf).parent_path());
+
+    HWND hwnd = GetDesktopWindow();              // owner window
+
+    RECT desktopRect;
+    GetWindowRect(hwnd, &desktopRect);
+
+    WIDTH = desktopRect.right;
+    HEIGHT = desktopRect.bottom;
 
     ZeroMemory(&ofn, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
@@ -20,8 +32,10 @@ Single::Single() {
 
     state = new GraphState();
 
-    window.create(sf::VideoMode(WIDTH, HEIGHT),
+    window.create(sf::VideoMode(WIDTH/2, HEIGHT/2),
                   "Untitled - GraphBox");
+
+    ShowWindow(window.getSystemHandle(), SW_MAXIMIZE);
 
     window.setFramerateLimit(60);
 
@@ -32,19 +46,16 @@ Single::Single() {
 
     defaultView.reset(sf::FloatRect(0, 0, WIDTH, HEIGHT));
     toolView.reset(sf::FloatRect(0, 0, WIDTH, TOOL_HEIGHT));
-    opView.reset(sf::FloatRect(0, 0, OP_WIDTH, OP_HEIGHT));
+    opView.reset(sf::FloatRect(0, 0, OP_WIDTH_PER*WIDTH, OP_HEIGHT_PER*HEIGHT));
 
     float toolHeightPerc = (float)TOOL_HEIGHT / HEIGHT;
 
-    float opWP = (float) OP_WIDTH/WIDTH;
-    float opHP = (float) OP_HEIGHT/HEIGHT;
-
-    float opWidthDiff = (1 - opWP)/2;
-    float opHeightDiff = (1 - opHP)/2;
+    float opWidthDiff = (1 - OP_WIDTH_PER)/2;
+    float opHeightDiff = (1 - OP_HEIGHT_PER)/2;
 
     defaultView.setViewport(sf::FloatRect(0.0f, toolHeightPerc, 1.0f, 1.0f));
     toolView.setViewport(sf::FloatRect(0.0f, 0.0f, 1.0f, toolHeightPerc));
-    opView.setViewport(sf::FloatRect(opWidthDiff, opHeightDiff, opWP, opHP));
+    opView.setViewport(sf::FloatRect(opWidthDiff, opHeightDiff, OP_WIDTH_PER, OP_HEIGHT_PER));
 }
 
 Single::~Single() {

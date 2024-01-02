@@ -4,9 +4,9 @@
 #include "graph/Node.h"
 #include <windows.h>
 
-const std::string VERSION = "1.1.3";
+const std::string VERSION = "1.1.4";
 
-int launch();
+int launch(std::string filepath);
 
 void registerMovement();
 

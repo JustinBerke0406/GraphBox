@@ -5,7 +5,7 @@
 #include "Single.h"
 
 class FileManager {
-    static std::string fileName(std::string path);
+    static std::string getFileName(std::string path);
 public:
     static void save(std::string fileName);
     static void load(std::string fileName);

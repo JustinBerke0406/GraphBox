@@ -7,6 +7,7 @@
 #include "PhysicsEngine.h"
 #include "ModeHandler.h"
 #include "option_types/Checkbox.h"
+#include "option_types/Slider.h"
 
 class Single {
 private:
@@ -17,8 +18,8 @@ public:
         return inst;
     }
 
-    const int WIDTH = 1920, HEIGHT = 1080;
-    const int OP_WIDTH = 600, OP_HEIGHT = 900;
+    int WIDTH = 1920, HEIGHT = 1080;
+    float OP_WIDTH_PER = 0.3125, OP_HEIGHT_PER = 0.8333;
 
     const float ZOOM_SPEED = 1.05f, MOVE_SPEED = 10.35f, WHEEL_SENS = 1.3f;
 
@@ -53,15 +54,20 @@ public:
     bool oneIndexing = false;
     bool indexOrdering = true;
 
-    Checkbox indexObject = Checkbox(160, 295, false);
+    std::map<std::string, Checkbox> checkSettings = {
+            {"oneIndexing", Checkbox(200, 345, false)},
+            {"forceInverse", Checkbox(200, 245, false)},
+    };
+
+    std::map<std::string, Slider> sliderSettings = {
+            {"baseFriction", Slider(350, 100, 0, 250, physicsEngine.frictionMult * 100)},
+            {"edgeFriction", Slider(350, 150, 0, 250, physicsEngine.spFrictionMult * 100)},
+            {"restLength", Slider(350, 200, 0, 10, physicsEngine.springRestLen)},
+    };
 
     sf::RenderWindow window;
     GraphState* state;
     sf::Font font;
-
-    sf::Vector3i gradOne = {0, 200, 54};
-    sf::Vector3i gradTwo = {240, 240, 0};
-    sf::Vector3i gradThree = {255, 0, 0};
 
     const int TOOL_HEIGHT = 40;
 

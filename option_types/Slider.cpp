@@ -46,3 +46,12 @@ void Slider::onInteract(RenderWindow& window) {
         updateValueDependents();
     }
 }
+
+bool Slider::isMouseOver(sf::RenderWindow &window) {
+    auto mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), Single::instance().opView);
+    auto bounds = axis.getGlobalBounds();
+
+    bounds.width += 1;
+
+    return bounds.contains(mousePos.x, mousePos.y);
+}
