@@ -14,3 +14,18 @@ A windowed application for creating graphs and maps; a useful tool for graph the
 You can find the latest release at the [Releases](https://github.com/JustinBerke0406/GraphBox/releases) page.
 
 To install, download and extract the compressed `graphbox` file. From there, the program can be launched from the unpacked exeutable.
+
+## Controls
+- WASD/Middle mouse button to pan the screen
+- Left click a node to select it
+- Right-click to delete nodes (not in Connect mode)
+- Connect two connected nodes to remove that connection (direction matters in Directed mode)
+- Double click a node to edit its name, press enter to save the name or escape to cancel
+- Ctrl-c/v on a selected node to copy/paste the name
+- Ctrl-s saves
+### Keybinds
+- Toggle Connect Mode: c
+- Toggle Force Mode: f
+- Toggle Directed Mode: d
+- Toggle Adjacency Mode: a
+- Open/Close option menu: o
