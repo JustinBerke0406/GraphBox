@@ -1,3 +1,4 @@
+#include <SFML/Graphics/RectangleShape.hpp>
 #include "Checkbox.h"
 #include "../Single.h"
 
@@ -21,9 +22,7 @@ void Checkbox::updateValueDependents() {
 }
 
 void Checkbox::onInteract(sf::RenderWindow& window) {
-    auto mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), Single::instance().opView);
-
-    bool testCond = box.getGlobalBounds().contains(mousePos.x, mousePos.y) && sf::Mouse::isButtonPressed(sf::Mouse::Button::Left);
+    bool testCond = isMouseClickHeld(window);
 
     if (testCond && !mousePrevClicked) {
         setValue(!value);
@@ -35,7 +34,7 @@ void Checkbox::onInteract(sf::RenderWindow& window) {
     updateValueDependents();
 }
 
-bool Checkbox::isMouseOver(RenderWindow &window) {
+bool Checkbox::checkBounds(RenderWindow &window) {
     auto mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), Single::instance().opView);
 
     return box.getGlobalBounds().contains(mousePos.x, mousePos.y);

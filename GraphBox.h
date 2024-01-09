@@ -4,7 +4,7 @@
 #include "graph/Node.h"
 #include <windows.h>
 
-const std::string VERSION = "1.1.4";
+const std::string VERSION = "1.1.5";
 
 int launch(std::string filepath);
 

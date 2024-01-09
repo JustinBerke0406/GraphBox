@@ -35,8 +35,13 @@ private:
 
     void runApplicableReleaseQueues();
     void runApplicableHeldLongQueues();
-public:
+
     InputHelper();
+public:
+    static InputHelper& instance() {
+        static InputHelper inst;
+        return inst;
+    }
 
     void registerEvents();
 
@@ -83,4 +88,6 @@ public:
     bool hasMouseMovedSince(Time start) const;
 
     bool isCtrlPressed() const;
+
+    Time elapsedTime() const;
 };

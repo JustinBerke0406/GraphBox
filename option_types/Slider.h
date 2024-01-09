@@ -16,10 +16,11 @@ private:
 
     void updateValueDependents() override;
     void onInteract(sf::RenderWindow& window) override;
+protected:
+    bool checkBounds(sf::RenderWindow& window) override;
 public:
     Slider(int x, int y, float min, float max, float defaultValue = 0.f, float width = 150.f, float height = 25.f): OptionType<float>(x, y, defaultValue),
             minValue(min), maxValue(max), width(width), height(height) {};
 
     void draw(sf::RenderWindow& window) override;
-    bool isMouseOver(sf::RenderWindow& window) override;
 };

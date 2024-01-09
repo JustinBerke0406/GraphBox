@@ -22,7 +22,7 @@ int launch(std::string filepath) {
 
     sf::Cursor cursor;
 
-    InputHelper& inputs = single.inputHelper;
+    InputHelper& inputs = InputHelper::instance();
 
     bool defaultCursor = true;
     bool offsetSet = false;
@@ -354,6 +354,10 @@ int launch(std::string filepath) {
 
                 single.defaultView.move(prevCoord - postCoord);
             }
+            else if(event.type == sf::Event::GainedFocus)
+                single.focused = true;
+            else if(event.type == sf::Event::LostFocus)
+                single.focused = false;
         }
     }
 
@@ -530,7 +534,7 @@ void print() {
 void registerMovement() {
     Single& single = Single::instance();
 
-    InputHelper& inputs = single.inputHelper;
+    InputHelper& inputs = InputHelper::instance();
 
     if (!single.mode["type"]) {
         if (inputs.isPressed(sf::Keyboard::Left)) {
@@ -550,7 +554,7 @@ void registerMovement() {
         }
     }
 
-    if (inputs.isCtrlPressed()) {
+    if (inputs.isCtrlPressed() && single.focused) {
         if (inputs.isPressed(sf::Keyboard::C)) {
             if (single.state->isNodeSelected()) {
                 sf::Clipboard::setString(single.state->getSelectedNode()->label);

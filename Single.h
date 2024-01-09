@@ -3,7 +3,6 @@
 #include <SFML/Graphics.hpp>
 #include <windows.h>
 #include "graph/GraphState.h"
-#include "helper/InputHelper.h"
 #include "PhysicsEngine.h"
 #include "ModeHandler.h"
 #include "option_types/Checkbox.h"
@@ -82,7 +81,7 @@ public:
 
     std::string fileName;
 
-    InputHelper inputHelper;
+    bool focused = true;
 
     ~Single();
 };
