@@ -14,6 +14,8 @@ private:
     float width;
     float height;
 
+    bool initialClick = false;
+
     void updateValueDependents() override;
     void onInteract(sf::RenderWindow& window) override;
 protected:

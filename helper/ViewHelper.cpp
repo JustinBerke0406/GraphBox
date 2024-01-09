@@ -24,8 +24,9 @@ bool ViewHelper::cursorOverClickable() {
 
     auto mousePos = sf::Mouse::getPosition(single.window);
     bool optCon = single.window.getViewport(single.opView).contains(mousePos);
+    bool maskCon = single.window.getViewport(single.maskView).contains(mousePos);
 
-    if (single.window.getViewport(single.defaultView).contains(mousePos) && !(optCon && single.mode["opt"])) {
+    if (single.window.getViewport(single.defaultView).contains(mousePos) && !(optCon && single.mode["opt"]) && !(maskCon && single.mode["mask"])) {
         Node *node = state->nodeAt(mousePos);
 
         if (node == nullptr)
@@ -37,14 +38,14 @@ bool ViewHelper::cursorOverClickable() {
         return true;
     }
     else if (optCon) {
-        for (auto check : single.checkSettings)
+        for (auto& check : single.checkSettings)
             if (check.second.isMouseOver(single.window))
                 return true;
 
-        for (auto slide : single.sliderSettings)
+        for (auto& slide : single.sliderSettings)
             if (slide.second.isMouseOver(single.window))
                 return true;
-    }
+    } // TODO curser over clickable for mask
 
     return false;
 }

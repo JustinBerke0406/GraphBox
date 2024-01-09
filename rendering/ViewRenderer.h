@@ -7,4 +7,5 @@ class ViewRenderer {
 public:
     static void renderToolbar();
     static void renderOptions();
+    static void renderMask();
 };

@@ -26,7 +26,8 @@ void ViewRenderer::renderToolbar() {
 
         if ((single.mode["force"] && name == "Force") || (single.mode["adj"] && name == "Adjacency") ||
             (single.mode["directed"] && name == "Directed") || (single.mode.mainMode == ModeHandler::Mode::Connect && name == "Connect") ||
-            (single.mode["opt"] && name == "Options"))
+            (single.mode["opt"] && name == "Options") ||
+            (single.mode["mask"] && name == "View"))
             button.setFillColor(single.HIGHLIGHT_COLOR);
 
         if (mousePos.y <= toolViewSize.y && mousePos.y >= 0 && mousePos.x > width*i && mousePos.x <= width*(i+1)) {
@@ -106,7 +107,14 @@ void ViewRenderer::renderOptions() {
 
     single.physicsEngine.springRestLen = rSlider.getValue();
 
-    write("Force: Invert", 255);
+    write("Force: Simulation Speed", 255);
+
+    Slider& sSlider = single.sliderSettings.at("simSpeed");
+    sSlider.draw(single.window);
+
+    single.deltaTime = sSlider.getValue() / 10;
+
+    write("Force: Invert", 305);
 
     Checkbox& iCheckbox = single.checkSettings.at("forceInverse");
 
@@ -114,13 +122,59 @@ void ViewRenderer::renderOptions() {
 
     single.mode["inv"] = iCheckbox.getValue();
 
-    write("1-Indexing", 355);
+    write("1-Indexing", 405);
 
     Checkbox& oCheckbox = single.checkSettings.at("oneIndexing");
 
     oCheckbox.draw(single.window);
 
     single.oneIndexing = oCheckbox.getValue();
+
+    single.window.setView(single.defaultView);
+}
+
+void ViewRenderer::renderMask() {
+    Single& single = Single::instance();
+
+    single.window.setView(single.maskView);
+
+    const int& WIDTH = single.MASK_WIDTH_PER*single.WIDTH, HEIGHT = single.MASK_HEIGHT_PER*single.HEIGHT;
+
+    auto rect = RectangleShape(Vector2f(WIDTH, HEIGHT));
+    rect.setFillColor(Color(230,230,230));
+    rect.setOutlineThickness(-2);
+    rect.setOutlineColor(Color(130,130,130));
+
+    single.window.draw(rect);
+
+    sf::Text text;
+    text.setFont(single.font);
+    text.setCharacterSize(30);
+    text.setFillColor(Color::Black);
+    text.setString("View");
+    text.setOrigin(text.getLocalBounds().width/2, 0);
+    text.setPosition(WIDTH/2, 5);
+
+    single.window.draw(text);
+
+    auto write = [&text, &single](const std::string& msg, int y) {
+        text.setFont(single.font);
+        text.setCharacterSize(24);
+        text.setFillColor(Color::Black);
+        text.setString(msg);
+        text.setOrigin(0, text.getLocalBounds().height/2);
+        text.setPosition(20, y);
+
+        single.window.draw(text);
+    };
+
+    write("Degree Gradient:", 105);
+
+    Checkbox& oCheckbox = single.checkSettings.at("degreeGradient");
+
+    oCheckbox.draw(single.window);
+
+    single.degreeGradient = oCheckbox.getValue();
 
     single.window.setView(single.defaultView);
 }

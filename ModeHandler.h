@@ -7,7 +7,7 @@
 class ModeHandler {
     std::map<std::string, bool> subModes;
 
-    const std::vector<std::string> allSubModes = {"directed", "error", "force", "inv", "adj", "opt", "type"};
+    const std::vector<std::string> allSubModes = {"directed", "error", "force", "inv", "adj", "opt", "type", "mask"};
 public:
     ModeHandler();
 

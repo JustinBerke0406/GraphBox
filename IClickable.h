@@ -30,8 +30,6 @@ protected:
     bool isMouseClickHeld(RenderWindow& window) {
         InputHelper& inputHelper = InputHelper::instance();
 
-        std::cout << isMouseHeld(window) << " " << inputHelper.pressedAt(Mouse::Left).asSeconds() << " " << entered.asSeconds() << std::endl;
-
         return isMouseHeld(window) && inputHelper.pressedAt(Mouse::Left) >= entered;
     }
 public:

@@ -31,6 +31,7 @@ Single::Single() {
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
     state = new GraphState();
+    graphData = new GraphData();
 
     window.create(sf::VideoMode(WIDTH/2, HEIGHT/2),
                   "Untitled - GraphBox");
@@ -47,15 +48,20 @@ Single::Single() {
     defaultView.reset(sf::FloatRect(0, 0, WIDTH, HEIGHT));
     toolView.reset(sf::FloatRect(0, 0, WIDTH, TOOL_HEIGHT));
     opView.reset(sf::FloatRect(0, 0, OP_WIDTH_PER*WIDTH, OP_HEIGHT_PER*HEIGHT));
+    maskView.reset(sf::FloatRect(0, 0, MASK_WIDTH_PER*WIDTH, MASK_HEIGHT_PER*HEIGHT));
 
     float toolHeightPerc = (float)TOOL_HEIGHT / HEIGHT;
 
     float opWidthDiff = (1 - OP_WIDTH_PER)/2;
     float opHeightDiff = (1 - OP_HEIGHT_PER)/2;
 
+    float maskWidthDiff = (1 - MASK_WIDTH_PER)/2;
+    float maskHeightDiff = (1 - OP_HEIGHT_PER)/2;
+
     defaultView.setViewport(sf::FloatRect(0.0f, toolHeightPerc, 1.0f, 1.0f));
     toolView.setViewport(sf::FloatRect(0.0f, 0.0f, 1.0f, toolHeightPerc));
     opView.setViewport(sf::FloatRect(opWidthDiff, opHeightDiff, OP_WIDTH_PER, OP_HEIGHT_PER));
+    maskView.setViewport(sf::FloatRect(maskWidthDiff, maskHeightDiff, MASK_WIDTH_PER, MASK_HEIGHT_PER));
 }
 
 Single::~Single() {

@@ -5,6 +5,7 @@ void Renderer::drawState() {
     Single& single = Single::instance();
 
     GraphState* state = single.state;
+    GraphData* graphData = single.graphData;
 
     std::vector<sf::CircleShape> circles;
     std::vector<sf::Text> texts;
@@ -19,6 +20,12 @@ void Renderer::drawState() {
     auto nodes = state->getNodes();
     auto selectedNode = state->getSelectedNode();
 
+    int trackGradient = -1, maxDegree = -1;
+    auto uniqueDegrees = (float) graphData->uniqueDegrees();
+
+    if (single.degreeGradient)
+        nodes = graphData->degree;
+
     for (const Node* n : nodes) {
         sf::CircleShape circ;
         circ.setRadius(0.5f * single.NODE_SIZE);
@@ -32,11 +39,30 @@ void Renderer::drawState() {
 
         circ.setPointCount(100);
 
-        sf::Color fillColor = (n == selectedNode) ? ((!single.mode["error"]) ? single.HIGHLIGHT_COLOR : single.ERROR_COLOR) : single.NODE_COLOR;
+        if (n->degrees > maxDegree) {
+            maxDegree = n->degrees;
+            trackGradient++;
+        }
+
+        sf::Color fillColor;
+
+        if (n == selectedNode) {
+            if (!single.mode["error"]) {
+                fillColor = single.HIGHLIGHT_COLOR;
+                circ.setOutlineThickness(0.05f * single.NODE_SIZE);
+                circ.setOutlineColor(single.ERROR_COLOR);
+            } else
+                fillColor = single.ERROR_COLOR;
+        } else if (single.degreeGradient)
+            fillColor = Maths::lerp((uniqueDegrees > 1) ? (float) trackGradient / (uniqueDegrees - 1) : 0, {single.LOW_GRADIENT, single.MID_GRADIENT, single.HIGH_GRADIENT});
+        else
+            fillColor = single.NODE_COLOR;
 
         if (single.mode["adj"] && selectedNode != nullptr) {
-            if (state->adjacentTo(n, selectedNode))
-                fillColor = single.ADJ_COLOR;
+            if (state->adjacentTo(n, selectedNode)) {
+                circ.setOutlineThickness(0.07f * single.NODE_SIZE);
+                circ.setOutlineColor(single.ADJ_COLOR);
+            }
         }
 
         circ.setFillColor(fillColor);
@@ -155,6 +181,9 @@ void Renderer::draw() {
 
     if (single.mode["opt"])
         ViewRenderer::renderOptions();
+
+    if (single.mode["mask"])
+        ViewRenderer::renderMask();
 }
 
 void Renderer::operator()() {

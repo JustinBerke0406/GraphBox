@@ -49,25 +49,28 @@ void PhysicsEngine::update() {
         }
 
         for (Node* node2 : nodes) {
-            if (node1 != node2) {
-                auto dist = distance(node1, node2);
+            if (node1 == node2)
+                continue;
 
-                if (dist <= single.NODE_SIZE) {
-                    auto vel = node1->velocity;
-                    sf::Vector2f distVec(node2->x - node1->x, node2->y - node1->y);
-                    auto unit = distVec/dist;
+            auto dist = distance(node1, node2);
 
-                    if ((vel.x * unit.x) + (vel.y * unit.y) >= 0) {
-                        auto Va = node1->velocity - node2->velocity;
-                        float scale = Va.x*unit.x + Va.y*unit.y;
+            if (dist > single.NODE_SIZE)
+                continue;
 
-                        sf::Vector2f Vaf = {Va.x - scale*unit.x, Va.y - scale*unit.y};
+            auto vel = node1->velocity;
+            sf::Vector2f distVec(node2->x - node1->x, node2->y - node1->y);
+            auto unit = distVec/dist;
 
-                        node1->velocity = Vaf + node2->velocity;
-                        node2->velocity += scale * unit;
-                    }
-                }
-            }
+            if ((vel.x * unit.x) + (vel.y * unit.y) < 0)
+                continue;
+
+            auto Va = node1->velocity - node2->velocity;
+            float scale = Va.x*unit.x + Va.y*unit.y;
+
+            sf::Vector2f Vaf = {Va.x - scale*unit.x, Va.y - scale*unit.y};
+
+            node1->velocity = Vaf + node2->velocity;
+            node2->velocity += scale * unit;
         }
     }
 
@@ -91,8 +94,8 @@ void PhysicsEngine::update() {
             node->velocity -= v;
         }
 
-        node->x += node->velocity.x * single.DELTA_TIME * single.NODE_SIZE;
-        node->y += node->velocity.y * single.DELTA_TIME * single.NODE_SIZE;
+        node->x += node->velocity.x * single.deltaTime * single.NODE_SIZE;
+        node->y += node->velocity.y * single.deltaTime * single.NODE_SIZE;
     }
 }
 

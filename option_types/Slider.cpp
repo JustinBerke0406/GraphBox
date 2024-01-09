@@ -35,11 +35,15 @@ void Slider::draw(RenderWindow& window) {
 void Slider::onInteract(RenderWindow& window) {
     auto mousePos = window.mapPixelToCoords(sf::Mouse::getPosition(window), Single::instance().opView);
 
-    if (isMouseClickHeld(window)) {
-        int diff = mousePos.x - xCord;
+    if ((!initialClick && isMouseClickHeld(window)) || (initialClick && InputHelper::instance().isPressed(Mouse::Left))) {
+        initialClick = true;
 
-        setValue(abs(maxValue - minValue) * (float) diff/ width);
+        float diff = std::clamp(mousePos.x - xCord, 0.0f, width);
+
+        setValue(abs(maxValue - minValue) * diff / width);
     } else {
+        initialClick = false;
+
         updateValueDependents();
     }
 }

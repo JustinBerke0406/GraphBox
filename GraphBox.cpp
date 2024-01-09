@@ -36,6 +36,8 @@ int launch(std::string filepath) {
     Node* draggedNode = nullptr;
     Node* lastClicked = nullptr;
 
+    GraphData* graphData = single.graphData;
+
     int timesNodeClicked = 0;
 
     Renderer render;
@@ -52,6 +54,8 @@ int launch(std::string filepath) {
         window.setView(single.defaultView);
 
         inputs.registerEvents();
+
+        graphData->updateDegrees();
 
         // Render
         render();
@@ -265,9 +269,10 @@ int launch(std::string filepath) {
                         else
                             FileManager::save(single.fileName);
                     }
-                    else if (button == "Options") {
+                    else if (button == "Options")
                         single.mode.toggle("opt");
-                    }
+                    else if (button == "View")
+                        single.mode.toggle("mask");
                 }
             }
             else if (event.type == sf::Event::KeyPressed) {
@@ -304,6 +309,12 @@ int launch(std::string filepath) {
                     }
                     else if (event.key.code == sf::Keyboard::Escape && single.mode["opt"]) {
                         single.mode["opt"] = false;
+                    }
+                    else if (event.key.code == sf::Keyboard::V) {
+                        single.mode.toggle("mask");
+                    }
+                    else if (event.key.code == sf::Keyboard::Escape && single.mode["mask"]) {
+                        single.mode["mask"] = false;
                     }
                 }
             }
